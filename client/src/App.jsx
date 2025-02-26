@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 
 const api_url = import.meta.env.VITE_REACT_APP_API_URL || "http://localhost:3001";
 
-const socket = io();
+const socket = io(api_url);
 
 export default function App() {
     const [sessionCode, setSessionCode] = useState("");
