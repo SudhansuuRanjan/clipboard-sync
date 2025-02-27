@@ -50,14 +50,14 @@ export default function App() {
                 <p className="text-lg">Session Code: <strong>{sessionCode}</strong></p>
             )}
 
-            <div className="flex gap-4">
+            <div className="flex md:gap-4 gap-2">
                 <input
-                    className="border p-1.5 rounded"
+                    className="border p-1.5 rounded md:max-w-md w-full"
                     placeholder="Enter session code"
                     value={inputCode}
                     onChange={(e) => setInputCode(e.target.value)}
                 />
-                <button className="px-4 py-1.5 bg-green-500 active:bg-green-600 text-white rounded" onClick={joinSession}>
+                <button className="px-4 py-1.5 text-sm w-40 bg-green-500 active:bg-green-600 text-white rounded" onClick={joinSession}>
                     Join Session
                 </button>
             </div>
