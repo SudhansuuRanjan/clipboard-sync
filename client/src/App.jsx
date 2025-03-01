@@ -144,18 +144,23 @@ export default function App() {
             <Toaster />
             <div className="max-w-3xl w-full bg-white shadow-lg rounded-2xl md:p-6 p-4 space-y-6">
                 <h1 className="text-3xl font-bold text-center text-gray-800">Clipboard Sync</h1>
-                {sessionCode && <p className="text-lg text-center items-center text-gray-600">Session Code: <strong className="text-blue-600">{sessionCode}</strong>
-                    <button className="text-red-500 ml-4 active:text-red-700 active:scale-95" onClick={() => {
-                        // confirm logout
-                        const ans = prompt("Are you sure you want to leave session? Type 'yes' to confirm.");
-                        if (ans !== "yes") return;
-                        setSessionCode("");
-                        localStorage.removeItem("sessionCode");
-                        setHistory([]);
-                    }}>
-                        <LogOut size={17} />
-                    </button>
-                </p>}
+                {sessionCode && <div className="w-full flex items-center justify-center flex-col">
+                    <p className="text-lg text-center items-center text-gray-600">Session Code: <strong className="text-blue-600">{sessionCode}</strong>
+                        <button className="text-red-500 ml-4 active:text-red-700 active:scale-95" onClick={() => {
+                            // confirm logout
+                            const ans = prompt("Are you sure you want to leave session? Type 'yes' to confirm.");
+                            if (ans !== "yes") return;
+                            setSessionCode("");
+                            localStorage.removeItem("sessionCode");
+                            setHistory([]);
+                        }}>
+                            <LogOut size={17} />
+                        </button>
+                    </p>
+                    <p className="text-gray-800 text-sm text-center max-w-xl px-3">
+                        (Join on another device using the code to sync clipboard content between devices.)
+                    </p>
+                </div>}
 
                 <div className="flex gap-2">
                     <input className="border p-2 rounded-lg flex-1" placeholder="Enter session code" value={inputCode} onChange={(e) => setInputCode(e.target.value)} />
