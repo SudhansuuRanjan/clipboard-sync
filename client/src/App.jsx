@@ -149,7 +149,7 @@ export default function App() {
         if (!sessionCode) return;
         const channel = supabase
             .channel("clipboard")
-            .on("postgres_changes", { event: "INSERT", schema: "public", table: "clipboard" }, (payload) => {
+            .on("postgres_changes", { event: "*", schema: "public", table: "clipboard" }, (payload) => {
                 if (payload.new.session_code === sessionCode) {
                     setHistory((prev) => [payload.new.content, ...prev]);
                     setClipboard("");
