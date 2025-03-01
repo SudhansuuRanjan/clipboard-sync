@@ -41,6 +41,9 @@ export default function App() {
         for (let i = 0; i < 5; i++) {
             newCode += characters.charAt(Math.floor(Math.random() * characters.length));
         }
+
+        await supabase.from("sessions").insert([{ code: newCode }]);
+
         setSessionCode(newCode);
         localStorage.setItem("sessionCode", newCode);
     };
@@ -49,13 +52,12 @@ export default function App() {
         if (!inputCode.trim()) return toast.error("Please enter a session code");
 
         // Check if session exists
-        const { data: session, error: sessionError } = await supabase
-            .from("clipboard")
-            .select("session_code")
-            .eq("session_code", inputCode.toUpperCase())
-            .single();
+        const { data: sessionData, error: sessionError } = await supabase
+            .from("sessions")
+            .select("*")
+            .eq("code", inputCode.toUpperCase());
 
-        if (sessionError) {
+        if (sessionData.length == 0 || sessionError) {
             toast.error("This session code does not exist. Please enter a valid code.");
             return;
         }
@@ -155,7 +157,7 @@ export default function App() {
                     setClipboard("");
                 }
 
-                if (payload.old.session_code === sessionCode && payload.eventType === "DELETE") {
+                if (payload.eventType === "DELETE") {
                     setHistory([]);
                 }
             })
