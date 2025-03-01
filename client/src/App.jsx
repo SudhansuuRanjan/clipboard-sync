@@ -150,9 +150,13 @@ export default function App() {
         const channel = supabase
             .channel("clipboard")
             .on("postgres_changes", { event: "*", schema: "public", table: "clipboard" }, (payload) => {
-                if (payload.new.session_code === sessionCode) {
+                if (payload.new.session_code === sessionCode && payload.eventType === "INSERT") {
                     setHistory((prev) => [payload.new.content, ...prev]);
                     setClipboard("");
+                }
+
+                if (payload.new.session_code === sessionCode && payload.eventType === "DELETE") {
+                    setHistory([]);
                 }
             })
             
