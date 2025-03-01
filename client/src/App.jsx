@@ -192,7 +192,7 @@ export default function App() {
                 </div>}
 
                 <div className="flex gap-2">
-                    <input className="border p-2 rounded-lg flex-1" placeholder="Enter session code" value={inputCode} onChange={(e) => setInputCode(e.target.value)} />
+                    <input className="border p-2 rounded-lg flex-1" placeholder="Enter session code to retrieve" value={inputCode} onChange={(e) => setInputCode(e.target.value)} />
                     <button className="bg-green-500 hover:bg-green-600 hover:scale-[101%] transition active:bg-green-700 text-white px-4 py-2 rounded-lg" onClick={joinSession}>Join</button>
                 </div>
 
