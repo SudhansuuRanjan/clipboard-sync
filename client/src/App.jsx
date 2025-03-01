@@ -33,22 +33,35 @@ export default function App() {
 
     // Update clipboard and save to Supabase
     const updateClipboard = async () => {
-        if (!sessionCode) return;
+        if (!sessionCode || !clipboard.trim()) return;
 
         await supabase.from("clipboard").insert([{ session_code: sessionCode, content: clipboard }]);
     };
 
-    // Copy to clipboard
+    // Copy text to clipboard
     const copyToClipboard = (content) => {
         navigator.clipboard.writeText(content);
+    };
+
+    // Add clipboard text (Fix for Firefox)
+    const addClipboardText = () => {
+        navigator.clipboard.readText().then((text) => {
+            if (text.trim()) {
+                setClipboard(text);
+            } else {
+                alert("No text found in clipboard");
+            }
+        }).catch(() => {
+            alert("Clipboard access denied. Try manually pasting.");
+        });
     };
 
     // Listen for realtime updates
     useEffect(() => {
         if (!sessionCode) return;
 
-        const subscription = supabase
-            .channel("realtime:clipboard")
+        const channel = supabase
+            .channel("clipboard")
             .on("postgres_changes", { event: "INSERT", schema: "public", table: "clipboard" }, (payload) => {
                 if (payload.new.session_code === sessionCode) {
                     setHistory((prev) => [payload.new.content, ...prev]);
@@ -58,12 +71,12 @@ export default function App() {
             .subscribe();
 
         return () => {
-            supabase.removeChannel(subscription);
+            supabase.removeChannel(channel);
         };
     }, [sessionCode]);
 
     return (
-        <div className="flex flex-col items-center p-6 gap-4 w-full">
+        <div className="flex flex-col items-center md:p-6 p-3 gap-4 w-full">
             <h1 className="text-2xl font-bold text-center">Clipboard Sync (Supabase)</h1>
 
             {!sessionCode ? (
@@ -93,9 +106,19 @@ export default function App() {
                 value={clipboard}
                 onChange={(e) => setClipboard(e.target.value)}
             />
-            <button className="px-4 py-2 bg-purple-500 text-white rounded" onClick={updateClipboard}>
-                Share Clipboard
-            </button>
+            <div className="flex md:gap-4 gap-2 text-sm">
+                <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={addClipboardText}>
+                    Add Clipboard Text
+                </button>
+
+                <button className="px-4 py-2 bg-rose-500 text-white rounded" onClick={() => setClipboard("")}>
+                    Clear
+                </button>
+
+                <button className="px-4 py-2 bg-green-500 text-white rounded" onClick={updateClipboard}>
+                    Share Content
+                </button>
+            </div>
 
             <h2 className="text-xl font-semibold mt-4">History</h2>
             <ul className="w-full border p-4 rounded bg-gray-100">
