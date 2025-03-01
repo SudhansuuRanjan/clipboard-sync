@@ -77,9 +77,18 @@ export default function App() {
         }
         const code = localStorage.getItem("sessionCode");
         await supabase.from("clipboard").insert([{ session_code: code, content: clipboard }]);
-        // if first item, add to history
-        if (history.length === 0) {
-            setHistory([clipboard]);
+
+        if (history.length == 0) {
+            // Manually fetch latest history to update UI immediately
+            const { data, error: fetchError } = await supabase
+                .from("clipboard")
+                .select("content")
+                .eq("session_code", code)
+                .order("created_at", { ascending: false });
+
+            if (!fetchError) {
+                setHistory(data.map((item) => item.content));
+            }
         }
 
         setClipboard("");
