@@ -169,7 +169,7 @@ export default function App() {
             <div className="max-w-3xl w-full bg-white shadow-lg rounded-2xl md:p-6 p-4 space-y-6">
                 <h1 className="text-3xl font-bold text-center text-gray-800">Clipboard Sync</h1>
                 {sessionCode && <div className="w-full flex items-center justify-center flex-col">
-                    <p className="text-lg text-center items-center text-gray-600">Session Code: <strong className="text-blue-600">{sessionCode}</strong>
+                    <p className="text-lg text-center items-center text-gray-600">Session Code: <strong className="text-blue-600">{sessionCode.toUpperCase()}</strong>
                         <button className="text-red-500 ml-4 active:text-red-700 active:scale-95" onClick={() => {
                             // confirm logout
                             const ans = confirm("Are you sure you want to leave the session?");
