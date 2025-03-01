@@ -46,6 +46,7 @@ export default function App() {
     const updateClipboard = async () => {
         if (!sessionCode || !clipboard.trim()) return;
         await supabase.from("clipboard").insert([{ session_code: sessionCode, content: clipboard }]);
+setClipboard("");
     };
 
     // Copy text to clipboard
