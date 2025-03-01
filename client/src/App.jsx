@@ -155,7 +155,7 @@ export default function App() {
                     setClipboard("");
                 }
 
-                if (payload.new.session_code === sessionCode && payload.eventType === "DELETE") {
+                if (payload.old.session_code === sessionCode && payload.eventType === "DELETE") {
                     setHistory([]);
                 }
             })
