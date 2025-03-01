@@ -43,7 +43,6 @@ export default function App() {
         }
         setSessionCode(newCode);
         localStorage.setItem("sessionCode", newCode);
-        toast.success("Session created successfully!");
     };
 
     const joinSession = async () => {
@@ -148,7 +147,6 @@ export default function App() {
 
     useEffect(() => {
         if (!sessionCode) return;
-
         const channel = supabase
             .channel("clipboard")
             .on("postgres_changes", { event: "INSERT", schema: "public", table: "clipboard" }, (payload) => {
@@ -157,16 +155,13 @@ export default function App() {
                     setClipboard("");
                 }
             })
-            .on("postgres_changes", { event: "DELETE", schema: "public", table: "clipboard" }, (payload) => {
-                setHistory((prev) => prev.filter(item => item !== payload.old.content));
-            })
+            
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
         };
     }, [sessionCode]);
-
 
     return (
         <div className="flex flex-col items-center min-h-screen bg-gray-100 md:p-6 p-3">
