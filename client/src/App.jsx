@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { Copy, ClipboardList, Trash2, PlusCircle } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -11,16 +12,26 @@ export default function App() {
     const [clipboard, setClipboard] = useState("");
     const [history, setHistory] = useState([]);
 
+    // Load session from local storage on mount
+    useEffect(() => {
+        const storedSession = localStorage.getItem("sessionCode");
+        if (storedSession) {
+            setSessionCode(storedSession);
+        }
+    }, []);
+
     // Create a session with a random 6-character code
     const createSession = async () => {
         const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
         setSessionCode(newCode);
+        localStorage.setItem("sessionCode", newCode);
     };
 
     // Join an existing session and fetch clipboard history
     const joinSession = async () => {
-        if (!inputCode) return;
+        if (!inputCode.trim()) return;
         setSessionCode(inputCode);
+        localStorage.setItem("sessionCode", inputCode);
 
         const { data, error } = await supabase
             .from("clipboard")
@@ -34,7 +45,6 @@ export default function App() {
     // Update clipboard and save to Supabase
     const updateClipboard = async () => {
         if (!sessionCode || !clipboard.trim()) return;
-
         await supabase.from("clipboard").insert([{ session_code: sessionCode, content: clipboard }]);
     };
 
@@ -76,70 +86,68 @@ export default function App() {
     }, [sessionCode]);
 
     return (
-        <div className="flex flex-col items-center md:p-6 p-3 gap-4 w-full">
-            <h1 className="text-2xl font-bold text-center">Clipboard Sync (Supabase)</h1>
+        <div className="flex flex-col items-center min-h-screen bg-gray-100 md:p-6 p-3">
+            <div className="max-w-3xl w-full bg-white shadow-lg rounded-2xl md:p-6 p-4 space-y-6">
+                <h1 className="text-3xl font-bold text-center text-gray-800">Clipboard Sync</h1>
+                {!sessionCode ? (
+                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg" onClick={createSession}>
+                        Create New Session
+                    </button>
+                ) : (
+                    <p className="text-lg text-center text-gray-600">Session Code: <strong className="text-blue-600">{sessionCode}</strong></p>
+                )}
 
-            {!sessionCode ? (
-                <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={createSession}>
-                    Create Session
-                </button>
-            ) : (
-                <p className="text-lg">Session Code: <strong>{sessionCode}</strong></p>
+                <div className="flex gap-2">
+                    <input
+                        className="border p-2 rounded-lg flex-1"
+                        placeholder="Enter session code"
+                        value={inputCode}
+                        onChange={(e) => setInputCode(e.target.value)}
+                    />
+                    <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg" onClick={joinSession}>
+                        Join
+                    </button>
+                </div>
+
+                <textarea
+                    rows={5}
+                    className="border p-3 w-full rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400"
+                    placeholder="Type or paste clipboard content here..."
+                    value={clipboard}
+                    onChange={(e) => setClipboard(e.target.value)}
+                />
+                <div className="flex gap-2 flex-wrap">
+                    <button className="flex-1 min-w-48 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg" onClick={addClipboardText}>
+                        <ClipboardList size={18} /> Add Clipboard Text
+                    </button>
+                    <button className="flex-1 flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg" onClick={() => setClipboard("")}> 
+                        <Trash2 size={18} /> Clear
+                    </button>
+                    <button className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg" onClick={updateClipboard}>
+                        <PlusCircle size={18} /> Share
+                    </button>
+                </div>
+            </div>
+
+            {history.length > 0 && (
+                <div className="max-w-3xl w-full bg-white shadow-lg rounded-2xl p-6 mt-6">
+                    <h2 className="text-xl font-semibold text-gray-800">Clipboard History</h2>
+                    <ul className="mt-4 space-y-2">
+                        {history.map((item, index) => (
+                            <li key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg shadow">
+                                <span className="text-gray-600 truncate">{item}</span>
+                                <button className="text-blue-500 hover:text-blue-700" onClick={() => copyToClipboard(item)}>
+                                    <Copy size={18} />
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             )}
 
-            <div className="flex md:gap-4 gap-2">
-                <input
-                    className="border p-1.5 rounded md:max-w-md w-full flex-1"
-                    placeholder="Enter session code"
-                    value={inputCode}
-                    onChange={(e) => setInputCode(e.target.value)}
-                />
-                <button className="px-4 py-1.5 w-fit flex-0 bg-green-500 text-white rounded" onClick={joinSession}>
-                    Join Session
-                </button>
-            </div>
-
-            <textarea
-                rows={5}
-                className="border p-2 w-full rounded bg-gray-100"
-                placeholder="Type or paste clipboard content here..."
-                value={clipboard}
-                onChange={(e) => setClipboard(e.target.value)}
-            />
-            <div className="flex md:gap-4 gap-2 text-sm">
-                <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={addClipboardText}>
-                    Add Clipboard Text
-                </button>
-
-                <button className="px-4 py-2 bg-rose-500 text-white rounded" onClick={() => setClipboard("")}>
-                    Clear
-                </button>
-
-                <button className="px-4 py-2 bg-green-500 text-white rounded" onClick={updateClipboard}>
-                    Share Content
-                </button>
-            </div>
-
-            <h2 className="text-xl font-semibold mt-4">History</h2>
-            <ul className="w-full border p-4 rounded bg-gray-100">
-                {history.map((item, index) => (
-                    <div key={index} className="p-2 border-b text-gray-500 flex justify-between items-start">
-                        <div>{index + 1}. {item}</div>
-                        <button className="px-2 py-1 text-sm font-medium bg-blue-500 text-white rounded" onClick={() => copyToClipboard(item)}>
-                            Copy
-                        </button>
-                    </div>
-                ))}
-            </ul>
-
-            <div className="px-4 text-center">
-                <p className="text-sm text-gray-500 mt-4">
-                    This is a simple clipboard sync app using Supabase Realtime Database.
-                </p>
-                <p className="text-sm text-gray-500 mt-2">
-                    Made with ❤️ by <a href="https://sudhanshur.vercel.app" target="_blank" rel="noreferrer">Sudhanshu Ranjan</a>
-                </p>
-            </div>
+            <footer className="mt-6 text-center text-gray-500 text-sm">
+                Made with ❤️ by <a href="https://sudhanshur.vercel.app" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">Sudhanshu Ranjan</a>
+            </footer>
         </div>
     );
 }
