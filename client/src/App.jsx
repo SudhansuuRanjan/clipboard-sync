@@ -48,6 +48,19 @@ export default function App() {
 
     const joinSession = async () => {
         if (!inputCode.trim()) return toast.error("Please enter a session code");
+
+        // Check if session exists
+        const { data: session, error: sessionError } = await supabase
+            .from("clipboard")
+            .select("session_code")
+            .eq("session_code", inputCode.toUpperCase())
+            .single();
+
+        if (sessionError) {
+            toast.error("This session code does not exist. Please enter a valid code.");
+            return;
+        }
+
         setSessionCode(inputCode);
         localStorage.setItem("sessionCode", inputCode);
 
@@ -72,13 +85,16 @@ export default function App() {
         if (!clipboard.trim()) return toast.error("Clipboard is empty!");
         if (clipboard.length > 15000) return toast.error("Clipboard content is too long. Please keep it under 15000 characters.");
 
+        let fistTime = false;
+
         if (!sessionCode) {
             await createSession();
+            fistTime = true;
         }
         const code = localStorage.getItem("sessionCode");
         await supabase.from("clipboard").insert([{ session_code: code, content: clipboard }]);
 
-        if (history.length == 0) {
+        if (history.length == 0 && fistTime) {
             // Manually fetch latest history to update UI immediately
             const { data, error: fetchError } = await supabase
                 .from("clipboard")
@@ -137,7 +153,6 @@ export default function App() {
             .on("postgres_changes", { event: "INSERT", schema: "public", table: "clipboard" }, (payload) => {
                 if (payload.new.session_code === sessionCode) {
                     setHistory((prev) => [payload.new.content, ...prev]);
-                    // setClipboard(payload.new.content);
                     setClipboard("");
                 }
             })
@@ -157,8 +172,8 @@ export default function App() {
                     <p className="text-lg text-center items-center text-gray-600">Session Code: <strong className="text-blue-600">{sessionCode}</strong>
                         <button className="text-red-500 ml-4 active:text-red-700 active:scale-95" onClick={() => {
                             // confirm logout
-                            const ans = prompt("Are you sure you want to leave session? Type 'yes' to confirm.");
-                            if (ans !== "yes") return;
+                            const ans = confirm("Are you sure you want to leave the session?");
+                            if (!ans) return;
                             setSessionCode("");
                             localStorage.removeItem("sessionCode");
                             setHistory([]);
