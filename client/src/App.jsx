@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Copy, ClipboardList, Trash2, Send, Trash2Icon, ChevronDown, ChevronRight, LogOut } from "lucide-react";
+import { Copy, ClipboardList, Trash2, Send, Trash2Icon, ChevronDown, ChevronRight, LogOut, Moon, Sun } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -12,7 +12,21 @@ export default function App() {
     const [inputCode, setInputCode] = useState("");
     const [clipboard, setClipboard] = useState("");
     const [history, setHistory] = useState([]);
-    const [expandedItems, setExpandedItems] = useState({}); // Track expanded state
+    const [expandedItems, setExpandedItems] = useState({});
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        // Check user's system preference or saved preference
+        const saved = localStorage.getItem('darkMode');
+        return saved ? JSON.parse(saved) : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    });
+
+    // Toggle dark mode and save preference
+    const toggleDarkMode = () => {
+        setIsDarkMode(prev => {
+            const newMode = !prev;
+            localStorage.setItem('darkMode', JSON.stringify(newMode));
+            return newMode;
+        });
+    };
 
     useEffect(() => {
         const storedSession = localStorage.getItem("sessionCode");
@@ -161,7 +175,7 @@ export default function App() {
                     setHistory([]);
                 }
             })
-            
+
             .subscribe();
 
         return () => {
@@ -170,14 +184,38 @@ export default function App() {
     }, [sessionCode]);
 
     return (
-        <div className="flex flex-col items-center min-h-screen bg-gray-100 md:p-6 p-3">
-            <Toaster />
-            <div className="max-w-3xl w-full bg-white shadow-lg rounded-2xl md:p-6 p-4 space-y-6">
-                <h1 className="text-3xl font-bold text-center text-gray-800">Clipboard Sync</h1>
+        <div className={`flex flex-col items-center min-h-screen md:p-6 p-3 
+            ${isDarkMode ? 'bg-gray-950 text-gray-200' : 'bg-gray-100 text-gray-900'}`}>
+            <Toaster
+                toastOptions={{
+                    style: {
+                        background: isDarkMode ? '#333' : '#fff',
+                        color: isDarkMode ? '#fff' : '#000',
+                    }
+                }}
+            />
+
+            {/* Dark Mode Toggle Button */}
+            <button
+                onClick={toggleDarkMode}
+                className="fixed top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 
+                text-gray-900 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+            >
+                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+
+            <div className={`max-w-3xl w-full shadow-lg rounded-2xl md:p-6 p-4 space-y-6 
+                ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+                <h1 className={`text-3xl font-bold text-center 
+                    ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                    Clipboard Sync
+                </h1>
+
                 {sessionCode && <div className="w-full flex items-center justify-center flex-col">
-                    <p className="text-lg text-center items-center text-gray-600">Session Code: <strong className="text-blue-600">{sessionCode.toUpperCase()}</strong>
+                    <p className={`text-lg text-center items-center 
+                        ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Session Code: <strong className="text-blue-600">{sessionCode.toUpperCase()}</strong>
                         <button className="text-red-500 ml-4 active:text-red-700 active:scale-95" onClick={() => {
-                            // confirm logout
                             const ans = confirm("Are you sure you want to leave the session?");
                             if (!ans) return;
                             setSessionCode("");
@@ -187,17 +225,32 @@ export default function App() {
                             <LogOut size={17} />
                         </button>
                     </p>
-                    <p className="text-gray-800 text-sm text-center max-w-xl px-3">
+                    <p className={`text-sm text-center max-w-xl px-3 
+                        ${isDarkMode ? 'text-gray-400' : 'text-gray-900'}`}>
                         (Join on another device using the code to sync clipboard content between devices.)
                     </p>
                 </div>}
 
                 <div className="flex gap-2">
-                    <input className="border p-2 rounded-lg flex-1" placeholder="Enter session code to retrieve" value={inputCode} onChange={(e) => setInputCode(e.target.value)} />
+                    <input
+                        className={`border p-2 rounded-lg flex-1 
+                            ${isDarkMode ? 'bg-slate-800 border-gray-600 text-gray-200' : 'bg-white border-gray-300 text-gray-900'}`}
+                        placeholder="Enter session code to retrieve"
+                        value={inputCode}
+                        onChange={(e) => setInputCode(e.target.value)}
+                    />
                     <button className="bg-green-500 hover:bg-green-600 hover:scale-[101%] transition active:bg-green-700 text-white px-4 py-2 rounded-lg" onClick={joinSession}>Join</button>
                 </div>
 
-                <textarea rows={5} className="border p-3 w-full rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400" placeholder="Type or paste clipboard content here..." value={clipboard} onChange={(e) => setClipboard(e.target.value)} />
+                <textarea
+                    rows={5}
+                    className={`border p-3 w-full rounded-lg focus:ring-2 focus:ring-blue-400 
+                        ${isDarkMode ? 'bg-slate-800 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
+                    placeholder="Type or paste clipboard content here..."
+                    value={clipboard}
+                    onChange={(e) => setClipboard(e.target.value)}
+                />
+
                 <div className="flex gap-2 flex-wrap">
                     <button className="flex-1 min-w-32 flex items-center justify-center transition gap-2 bg-blue-500 hover:bg-blue-600 hover:scale-[101%] active:bg-blue-700 text-white py-2 rounded-lg" onClick={addClipboardText}><ClipboardList size={18} /> Paste Text</button>
                     <button className="flex-1 min-w-32 flex items-center justify-center transition gap-2 bg-red-500 hover:bg-red-600 hover:scale-[101%] active:bg-red-700 text-white py-2 rounded-lg" onClick={() => { setClipboard(""); toast.success("Clipboard cleared successfully!"); }}><Trash2 size={18} /> Clear</button>
@@ -206,17 +259,27 @@ export default function App() {
             </div>
 
             {history.length > 0 && (
-                <div className="max-w-3xl w-full bg-white shadow-lg rounded-2xl md:p-6 p-5 mt-6">
+                <div className={`max-w-3xl w-full shadow-lg rounded-2xl md:p-6 p-5 mt-6 
+                    ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
                     <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-semibold text-gray-800">Clipboard History</h2>
+                        <h2 className={`text-xl font-semibold 
+                            ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                            Clipboard History
+                        </h2>
                         <button className="text-red-500 active:text-red-700 active:scale-95 flex gap-2" onClick={deleteAll}><Trash2Icon size={18} /></button>
                     </div>
                     <ul className="mt-4 space-y-2">
                         {history.map((item, index) => (
-                            <li key={index} className="flex justify-between items-start bg-gray-50 p-2 gap-2 rounded-lg shadow">
+                            <li key={index} className={`flex justify-between items-start p-2 gap-2 rounded-lg shadow 
+                                ${isDarkMode ? 'bg-slate-800' : 'bg-gray-50'}`}>
                                 <div className="flex gap-2 items-start">
-                                    <button className="text-blue-500 transition" onClick={() => toggleExpand(index)}>{!expandedItems[index] ? <ChevronRight size={18} /> : <ChevronDown size={18} />}</button>
-                                    <p className="text-gray-600 text-sm truncate text-wrap">{expandedItems[index] ? item : item.substring(0, 100) + (item.length > 100 ? "..." : "")}</p>
+                                    <button className="text-blue-500 transition" onClick={() => toggleExpand(index)}>
+                                        {!expandedItems[index] ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
+                                    </button>
+                                    <p className={`text-sm truncate text-wrap 
+                                        ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                                        {expandedItems[index] ? item : item.substring(0, 100) + (item.length > 100 ? "..." : "")}
+                                    </p>
                                 </div>
                                 <button className="text-blue-500 active:text-blue-700 active:scale-95" onClick={() => copyToClipboard(item)}><Copy size={18} /></button>
                             </li>
@@ -225,10 +288,10 @@ export default function App() {
                 </div>
             )}
 
-            <footer className="mt-6 text-center text-gray-500 text-sm">
+            <footer className={`mt-6 text-center text-sm 
+                ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 Made with ❤️ by <a href="https://sudhanshur.vercel.app" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">Sudhanshu Ranjan</a>
             </footer>
-
         </div>
     );
 }
