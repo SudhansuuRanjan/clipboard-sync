@@ -198,6 +198,7 @@ export default function App() {
             {/* Dark Mode Toggle Button */}
             <button
                 onClick={toggleDarkMode}
+                aria-label="Toggle Dark Mode"
                 className="fixed top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 
                 text-gray-900 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
             >
@@ -214,14 +215,16 @@ export default function App() {
                 {sessionCode && <div className="w-full flex items-center justify-center flex-col">
                     <p className={`text-lg text-center items-center 
                         ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Session Code: <strong className="text-blue-600">{sessionCode.toUpperCase()}</strong>
-                        <button className="text-red-500 ml-4 active:text-red-700 active:scale-95" onClick={() => {
-                            const ans = confirm("Are you sure you want to leave the session?");
-                            if (!ans) return;
-                            setSessionCode("");
-                            localStorage.removeItem("sessionCode");
-                            setHistory([]);
-                        }}>
+                        Session Code: <strong className={isDarkMode ? 'text-blue-500' : 'text-blue-600'}>{sessionCode.toUpperCase()}</strong>
+                        <button
+                            aria-label="Leave Session"
+                            className="text-red-500 ml-4 active:text-red-700 active:scale-95" onClick={() => {
+                                const ans = confirm("Are you sure you want to leave the session?");
+                                if (!ans) return;
+                                setSessionCode("");
+                                localStorage.removeItem("sessionCode");
+                                setHistory([]);
+                            }}>
                             <LogOut size={17} />
                         </button>
                     </p>
