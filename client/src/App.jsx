@@ -276,7 +276,7 @@ export default function App() {
                                     <button className="text-blue-500 transition" onClick={() => toggleExpand(index)}>
                                         {!expandedItems[index] ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
                                     </button>
-                                    <p className={`text-sm truncate text-wrap 
+                                    <p className={`text-sm truncate text-wrap md:max-w-[95%] max-w-[70%] 
                                         ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                                         {expandedItems[index] ? item : item.substring(0, 100) + (item.length > 100 ? "..." : "")}
                                     </p>
