@@ -42,7 +42,7 @@ export default defineConfig({
         "start_url": "/",
         "id": "/",
         "display": "standalone",
-        "theme_color": "#00BFFF",
+        "theme_color": "#000000",
         "background_color": "#000000",
         "orientation": "portrait",
         "prefer_related_applications": true
