@@ -184,7 +184,7 @@ export default function App() {
     }, [sessionCode]);
 
     return (
-        <div className={`flex flex-col items-center min-h-screen md:p-6 p-3 md:pt-6 pt-10
+        <div className={`flex flex-col items-center min-h-screen md:p-6 p-3 md:pt-16 pt-16
             ${isDarkMode ? 'bg-gray-950 text-gray-200' : 'bg-gray-100 text-gray-900'}`}>
             <Toaster
                 toastOptions={{
@@ -242,7 +242,7 @@ export default function App() {
                         value={inputCode}
                         onChange={(e) => setInputCode(e.target.value)}
                     />
-                    <button className="bg-green-500 hover:bg-green-600 hover:scale-[101%] transition active:bg-green-700 text-white px-4 py-2 rounded-lg" onClick={joinSession}>Join</button>
+                    <button className={`bg-green-500 font-medium hover:bg-green-600 hover:scale-[101%] transition active:bg-green-700 px-4 py-2 rounded-lg ${isDarkMode ? `text-gray-800`:`text-white`}`} onClick={joinSession}>Join</button>
                 </div>
 
                 <textarea
