@@ -145,6 +145,9 @@ export default function App() {
     };
 
     const deleteAll = async () => {
+        const response = confirm("Are you sure you want to clear clipboards?");
+        if(!response) return;
+        if(history.length == 0)  return toast.error("No items in your clipboard history");
         const { error } = await supabase.from("clipboard").delete().eq("session_code", sessionCode);
         if (error) {
             toast.error("An error occurred while deleting clipboard history");
