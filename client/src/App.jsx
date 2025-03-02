@@ -184,7 +184,7 @@ export default function App() {
     }, [sessionCode]);
 
     return (
-        <div className={`flex flex-col items-center min-h-screen md:p-6 p-3 
+        <div className={`flex flex-col items-center min-h-screen md:p-6 p-3 md:pt-6 pt-10
             ${isDarkMode ? 'bg-gray-950 text-gray-200' : 'bg-gray-100 text-gray-900'}`}>
             <Toaster
                 toastOptions={{
