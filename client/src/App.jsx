@@ -210,7 +210,7 @@ export default function App() {
 
             <div className={`max-w-5xl lg:max-w-4xl md:max-w-3xl w-full shadow-lg rounded-2xl md:p-6 p-4 space-y-6 
                 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-                <h1 className={`text-3xl font-bold text-center 
+                <h1 className={`text-3xl font-extrabold text-center 
                     ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                     Clipboard Sync
                 </h1>
