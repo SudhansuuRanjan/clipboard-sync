@@ -76,8 +76,8 @@ export default function App() {
             return;
         }
 
-        setSessionCode(inputCode);
-        localStorage.setItem("sessionCode", inputCode);
+        setSessionCode(inputCode.toUpperCase());
+        localStorage.setItem("sessionCode", inputCode.toUpperCase());
 
         const { data, error } = await supabase
             .from("clipboard")
@@ -239,7 +239,7 @@ export default function App() {
                         className={`border p-2 rounded-lg flex-1 
                             ${isDarkMode ? 'bg-slate-800 border-gray-600 text-gray-200' : 'bg-white border-gray-300 text-gray-900'}`}
                         placeholder="Enter session code to retrieve"
-                        value={inputCode}
+                        value={inputCode.toUpperCase()}
                         onChange={(e) => setInputCode(e.target.value)}
                     />
                     <button className={`bg-green-500 font-medium hover:bg-green-600 hover:scale-[101%] transition active:bg-green-700 px-4 py-2 rounded-lg ${isDarkMode ? `text-gray-800`:`text-white`}`} onClick={joinSession}>Join</button>
