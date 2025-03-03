@@ -145,6 +145,9 @@ export default function App() {
     };
 
     const deleteAll = async () => {
+        const response = confirm("Are you sure you want to clear clipboards?");
+        if(!response) return;
+        if(history.length == 0)  return toast.error("No items in your clipboard history");
         const { error } = await supabase.from("clipboard").delete().eq("session_code", sessionCode);
         if (error) {
             toast.error("An error occurred while deleting clipboard history");
@@ -205,7 +208,7 @@ export default function App() {
                 {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            <div className={`max-w-3xl w-full shadow-lg rounded-2xl md:p-6 p-4 space-y-6 
+            <div className={`max-w-5xl lg:max-w-4xl max-w-3xl w-full shadow-lg rounded-2xl md:p-6 p-4 space-y-6 
                 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
                 <h1 className={`text-3xl font-bold text-center 
                     ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
@@ -262,7 +265,7 @@ export default function App() {
             </div>
 
             {history.length > 0 && (
-                <div className={`max-w-3xl w-full shadow-lg rounded-2xl md:p-6 p-5 mt-6 
+                <div className={`max-w-5xl lg:max-w-4xl max-w-3xl w-full shadow-lg rounded-2xl md:p-6 p-5 mt-6 
                     ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
                     <div className="flex justify-between items-center">
                         <h2 className={`text-xl font-semibold 
