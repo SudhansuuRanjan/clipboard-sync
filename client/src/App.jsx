@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Copy, ClipboardList, Trash2, Send, Trash2Icon, ChevronDown, ChevronRight, LogOut, Moon, Sun } from "lucide-react";
+import { Copy, ClipboardList, Trash2, Send, Trash2Icon, ChevronDown, ChevronRight, LogOut, Moon, Sun, Edit } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -13,6 +13,7 @@ export default function App() {
     const [clipboard, setClipboard] = useState("");
     const [history, setHistory] = useState([]);
     const [expandedItems, setExpandedItems] = useState({});
+    const [deleteOne, setDeleteOne] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(() => {
         // Check user's system preference or saved preference
         const saved = localStorage.getItem('darkMode');
@@ -35,7 +36,7 @@ export default function App() {
             (async () => {
                 const { data, error } = await supabase
                     .from("clipboard")
-                    .select("content")
+                    .select("*")
                     .eq("session_code", storedSession.toUpperCase())
                     .order("created_at", { ascending: false });
 
@@ -44,7 +45,9 @@ export default function App() {
                     return;
                 }
 
-                setHistory(data.map((item) => item.content));
+                console.log(data);
+
+                setHistory(data);
             })();
         }
     }, []);
@@ -81,7 +84,7 @@ export default function App() {
 
         const { data, error } = await supabase
             .from("clipboard")
-            .select("content")
+            .select("*")
             .eq("session_code", inputCode.toUpperCase())
             .order("created_at", { ascending: false });
 
@@ -93,7 +96,7 @@ export default function App() {
         toast.success(`Joined session ${inputCode.toUpperCase()} successfully!`);
         setInputCode("");
         setClipboard("");
-        if (!error) setHistory(data.map((item) => item.content));
+        if (!error) setHistory(data);
     };
 
     const updateClipboard = async () => {
@@ -113,12 +116,12 @@ export default function App() {
             // Manually fetch latest history to update UI immediately
             const { data, error: fetchError } = await supabase
                 .from("clipboard")
-                .select("content")
+                .select("*")
                 .eq("session_code", code)
                 .order("created_at", { ascending: false });
 
             if (!fetchError) {
-                setHistory(data.map((item) => item.content));
+                setHistory(data);
             }
         }
 
@@ -146,8 +149,8 @@ export default function App() {
 
     const deleteAll = async () => {
         const response = confirm("Are you sure you want to clear clipboards?");
-        if(!response) return;
-        if(history.length == 0)  return toast.error("No items in your clipboard history");
+        if (!response) return;
+        if (history.length == 0) return toast.error("No items in your clipboard history");
         const { error } = await supabase.from("clipboard").delete().eq("session_code", sessionCode);
         if (error) {
             toast.error("An error occurred while deleting clipboard history");
@@ -164,18 +167,38 @@ export default function App() {
         }));
     };
 
+    const handleEdit = async (id) => {
+        setDeleteOne(true);
+        // fetch item from database
+        const content = history.find((item) => item.id === id).content;
+        setClipboard(content);
+        // delete item from database
+        await supabase.from("clipboard").delete().eq("id", id);
+
+        // delete item from history
+        const newHistory = history.filter((item) => item.id !== id);
+        setHistory(newHistory);
+        setDeleteOne(false);
+
+        toast.success("Clipboard content added to editor!");
+    }
+
     useEffect(() => {
         if (!sessionCode) return;
         const channel = supabase
             .channel("clipboard")
             .on("postgres_changes", { event: "*", schema: "public", table: "clipboard" }, (payload) => {
                 if (payload.new.session_code === sessionCode && payload.eventType === "INSERT") {
-                    setHistory((prev) => [payload.new.content, ...prev]);
+                    setHistory((prev) => [payload.new, ...prev]);
                     setClipboard("");
                 }
 
                 if (payload.eventType === "DELETE") {
-                    setHistory([]);
+                    if (deleteOne) {
+                        setHistory([]);
+                    } else {
+                        setHistory((prev) => prev.filter((item) => item.id !== payload.old.id));
+                    }
                 }
             })
 
@@ -245,7 +268,7 @@ export default function App() {
                         value={inputCode.toUpperCase()}
                         onChange={(e) => setInputCode(e.target.value)}
                     />
-                    <button className={`bg-green-500 font-medium hover:bg-green-600 hover:scale-[101%] transition active:bg-green-700 px-4 py-2 rounded-lg ${isDarkMode ? `text-gray-800`:`text-white`}`} onClick={joinSession}>Join</button>
+                    <button className={`bg-green-500 font-medium hover:bg-green-600 hover:scale-[101%] transition active:bg-green-700 px-4 py-2 rounded-lg ${isDarkMode ? `text-gray-800` : `text-white`}`} onClick={joinSession}>Join</button>
                 </div>
 
                 <textarea
@@ -276,18 +299,21 @@ export default function App() {
                     </div>
                     <ul className="mt-4 space-y-2">
                         {history.map((item, index) => (
-                            <li key={index} className={`flex justify-between items-start p-2 gap-2 rounded-lg shadow 
+                            <li key={item.id} className={`flex justify-between items-start p-2 gap-2 rounded-lg shadow 
                                 ${isDarkMode ? 'bg-slate-800' : 'bg-gray-50'}`}>
                                 <div className="flex gap-2 items-start">
-                                    <button className="text-blue-500 transition" onClick={() => toggleExpand(index)}>
-                                        {!expandedItems[index] ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
+                                    <button className="text-blue-500 transition" onClick={() => toggleExpand(item.id)}>
+                                        {!expandedItems[item.id] ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
                                     </button>
-                                    <p className={`text-sm truncate text-wrap md:max-w-[95%] max-w-[70%] 
+                                    <p onClick={() => toggleExpand(item.id)} className={`text-sm flex-1 cursor-pointer truncate text-wrap w-fit
                                         ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                                        {expandedItems[index] ? item : item.substring(0, 100) + (item.length > 100 ? "..." : "")}
+                                        {expandedItems[item.id] ? item.content : item.content.substring(0, 200) + (item.content.length > 200 ? "..." : "")}
                                     </p>
                                 </div>
-                                <button className="text-blue-500 active:text-blue-700 active:scale-95" onClick={() => copyToClipboard(item)}><Copy size={18} /></button>
+                                <div className="flex items-center gap-2">
+                                    <button className="text-green-500 active:text-green-700 active:scale-95" onClick={() => handleEdit(item.id)}><Edit size={18} /></button>
+                                    <button className="text-blue-500 active:text-blue-700 active:scale-95" onClick={() => copyToClipboard(item.content)}><Copy size={18} /></button>
+                                </div>
                             </li>
                         ))}
                     </ul>
