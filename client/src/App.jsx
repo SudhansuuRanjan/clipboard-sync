@@ -295,13 +295,13 @@ export default function App() {
                             ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                             Clipboard History
                         </h2>
-                        <button className="text-red-500 active:text-red-700 active:scale-95 flex gap-2" onClick={deleteAll}><Trash2Icon size={18} /></button>
+                        <button className="text-red-500 active:text-red-700 active:scale-95 flex gap-2" onClick={deleteAll}><Trash2Icon size={20} /></button>
                     </div>
                     <ul className="mt-4 space-y-2">
                         {history.map((item, index) => (
-                            <li key={item.id} className={`flex justify-between items-start p-2 gap-2 rounded-lg shadow 
+                            <li key={item.id} className={`flex justify-between items-start p-2 py-2.5 gap-2 rounded-lg shadow 
                                 ${isDarkMode ? 'bg-slate-800' : 'bg-gray-50'}`}>
-                                <div className="flex gap-2 items-start">
+                                <div className="flex gap-1.5 items-start">
                                     <button className="text-blue-500 transition" onClick={() => toggleExpand(item.id)}>
                                         {!expandedItems[item.id] ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
                                     </button>
@@ -311,8 +311,8 @@ export default function App() {
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <button className="text-green-500 active:text-green-700 active:scale-95" onClick={() => handleEdit(item.id)}><Edit size={18} /></button>
-                                    <button className="text-blue-500 active:text-blue-700 active:scale-95" onClick={() => copyToClipboard(item.content)}><Copy size={18} /></button>
+                                    <button className="text-green-500 active:text-green-700 active:scale-95" onClick={() => handleEdit(item.id)}><Edit size={20} /></button>
+                                    <button className="text-blue-500 active:text-blue-700 active:scale-95" onClick={() => copyToClipboard(item.content)}><Copy size={20} /></button>
                                 </div>
                             </li>
                         ))}
