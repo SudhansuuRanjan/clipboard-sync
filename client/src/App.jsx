@@ -12,13 +12,41 @@ export default function App() {
     const [inputCode, setInputCode] = useState("");
     const [clipboard, setClipboard] = useState("");
     const [history, setHistory] = useState([]);
-    const [expandedItems, setExpandedItems] = useState({});
+    const [expandedId, setExpandedId] = useState(null);
     const [deleteOne, setDeleteOne] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(() => {
         // Check user's system preference or saved preference
         const saved = localStorage.getItem('darkMode');
         return saved ? JSON.parse(saved) : window.matchMedia('(prefers-color-scheme: dark)').matches;
     });
+    const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+    const fetchClipboardHistory = async () => {
+        if (!sessionCode) return;
+        console.log("Fetching clipboard history");
+        let { data, error } = await supabase
+            .from("clipboard")
+            .select("*")
+            .eq("session_code", sessionCode);
+        console.log(data);
+        if (!error) setClipboard(data || []);
+        console.log("Fetched clipboard history");
+    };
+
+    useEffect(() => {
+        const handleOnline = () => {
+            setIsOffline(false);
+            setTimeout(fetchClipboardHistory, 100);
+        };
+        const handleOffline = () => setIsOffline(true);
+
+        window.addEventListener("online", handleOnline);
+        window.addEventListener("offline", handleOffline);
+        return () => {
+            window.removeEventListener("online", handleOnline);
+            window.removeEventListener("offline", handleOffline);
+        };
+    }, []);
 
     // Toggle dark mode and save preference
     const toggleDarkMode = () => {
@@ -44,8 +72,6 @@ export default function App() {
                     toast.error("An error occurred while fetching clipboard history");
                     return;
                 }
-
-                console.log(data);
 
                 setHistory(data);
             })();
@@ -103,16 +129,16 @@ export default function App() {
         if (!clipboard.trim()) return toast.error("Clipboard is empty!");
         if (clipboard.length > 15000) return toast.error("Clipboard content is too long. Please keep it under 15000 characters.");
 
-        let fistTime = false;
+        let firstTime = false;
 
         if (!sessionCode) {
             await createSession();
-            fistTime = true;
+            firstTime = true;
         }
         const code = localStorage.getItem("sessionCode");
         await supabase.from("clipboard").insert([{ session_code: code, content: clipboard }]);
 
-        if (history.length == 0 && fistTime) {
+        if (history.length == 0 && firstTime) {
             // Manually fetch latest history to update UI immediately
             const { data, error: fetchError } = await supabase
                 .from("clipboard")
@@ -160,11 +186,8 @@ export default function App() {
         toast.success("Clipboard history deleted successfully!");
     };
 
-    const toggleExpand = (index) => {
-        setExpandedItems((prev) => ({
-            ...prev,
-            [index]: !prev[index]
-        }));
+    const toggleExpand = (id) => {
+        setExpandedId(expandedId === id ? null : id);
     };
 
     const handleEdit = async (id) => {
@@ -201,13 +224,12 @@ export default function App() {
                     }
                 }
             })
-
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [sessionCode]);
+    }, [sessionCode, isOffline]);
 
     return (
         <div className={`flex flex-col items-center min-h-screen md:p-6 p-3 md:pt-16 pt-16
@@ -237,6 +259,11 @@ export default function App() {
                     ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                     Clipboard Sync
                 </h1>
+
+                {isOffline && <div className={`w-fit mx-auto bg-red-100 text-red-700 p-2 py-1 rounded-lg
+                    ${isDarkMode ? 'bg-red-300 text-red-800' : 'bg-red-100 text-red-700'}`}>
+                    You are offline. Please connect to the internet to sync clipboard content.
+                </div>}
 
                 {sessionCode && <div className="w-full flex items-center justify-center flex-col">
                     <p className={`text-lg text-center items-center 
@@ -303,11 +330,11 @@ export default function App() {
                                 ${isDarkMode ? 'bg-slate-800' : 'bg-gray-50'}`}>
                                 <div className="flex gap-1 items-start">
                                     <button className="text-blue-500 transition" onClick={() => toggleExpand(item.id)}>
-                                        {!expandedItems[item.id] ? <ChevronRight size={18} /> : <ChevronDown size={19} />}
+                                        {!expandedId ? <ChevronRight size={18} /> : <ChevronDown size={19} />}
                                     </button>
                                     <p onClick={() => toggleExpand(item.id)} className={`text-sm flex-1 cursor-pointer truncate text-wrap w-fit
                                         ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                                        {expandedItems[item.id] ? item.content : item.content.substring(0, 200) + (item.content.length > 200 ? "..." : "")}
+                                        {expandedId === item.id ? item.content : item.content.length > 180 ? item.content.substring(0, 180) + "..." : item.content.substring(0, 180)}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3">
