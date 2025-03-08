@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Copy, ClipboardList, Trash2, Send, Trash2Icon, ChevronDown, ChevronRight, LogOut, Moon, Sun, Edit } from "lucide-react";
+import { Copy, ClipboardList, Trash2, Send, Trash2Icon, ChevronDown, ChevronRight, LogOut, Moon, Sun, Edit, FileUp } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -306,6 +306,21 @@ export default function App() {
                     value={clipboard}
                     onChange={(e) => setClipboard(e.target.value)}
                 />
+
+                <input type="file" className="hidden" id="file" accept=".txt" onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        if(!e.target.result) return;
+                        if(e.target.result.length > 15000) return toast.error("File content is too long. Please keep it under 15000 characters.");
+                        setClipboard(e.target.result);
+                    };
+                    reader.readAsText(file);
+                }} />
+                <label htmlFor="file" className={`flex w-fit items-center gap-2 cursor-pointer bg-gray-900 border border-gray-700  hover:scale-[101%] active:bg-blue-700 text-white py-2 px-6 rounded-full text-sm`}>
+                    <FileUp className="text-blue-500" size={18} /> Import Text File
+                </label>
 
                 <div className="flex gap-2 flex-wrap">
                     <button className="flex-1 min-w-32 flex items-center justify-center transition gap-2 bg-blue-500 hover:bg-blue-600 hover:scale-[101%] active:bg-blue-700 text-white py-2 rounded-lg" onClick={addClipboardText}><ClipboardList size={18} /> Paste Text</button>
