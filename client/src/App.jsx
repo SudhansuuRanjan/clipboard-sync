@@ -397,7 +397,8 @@ export default function App() {
                         // clear file input
                         e.target.value = null;
                     }} />
-                    <label htmlFor="file" className={`flex sm:hidden w-fit items-center gap-2 cursor-pointer border hover:scale-[101%] ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white active:bg-blue-600' : 'bg-gray-100 text-gray-800 border-gray-300 active:bg-gray-400'} py-1.5 md:px-4 px-3 rounded-full text-sm`}>
+
+                    <label htmlFor="file" className={`hidden md:flex w-fit items-center gap-2 cursor-pointer border hover:scale-[101%] ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white active:bg-blue-600' : 'bg-gray-100 text-gray-800 border-gray-300 active:bg-gray-400'} py-1.5 md:px-4 px-3 rounded-full text-sm`}>
                         <FileUp className="text-blue-500" size={18} /> Import Text File
                     </label>
                 </div>
@@ -460,7 +461,7 @@ export default function App() {
                                             <div>
                                                 {
                                                     item.file && <a href={item.fileUrl}
-                                                        className="text-blue-500 text-sm hover:underline"
+                                                        className="text-blue-500 text-sm hover:underline truncate"
                                                         target="_blank"
                                                         rel="noreferrer"
                                                     >
