@@ -234,6 +234,9 @@ export default function App() {
         setClipboard(content);
         // delete item from database
         await supabase.from("clipboard").delete().eq("id", id);
+        
+        // set file if exists
+        setFileUrl(history.find((item) => item.id === id).file);
 
         // delete item from history
         const newHistory = history.filter((item) => item.id !== id);
