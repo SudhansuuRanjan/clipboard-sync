@@ -291,7 +291,7 @@ export default function App() {
 
     return (
         <div className={`flex relative flex-col items-center min-h-screen md:p-6 p-3 md:pt-16 pt-16
-            ${isDarkMode ? 'bg-gray-950 text-gray-200' : 'bg-gray-100 text-gray-900'}`}>
+            ${isDarkMode ? 'bg-gray-950 text-gray-200' : 'bg-gray-200 text-gray-900'}`}>
             <Toaster
                 toastOptions={{
                     style: {
@@ -348,7 +348,7 @@ export default function App() {
                 <div className="flex gap-2">
                     <input
                         className={`border p-2 py-1.5 rounded-lg flex-1 
-                            ${isDarkMode ? 'bg-slate-800 border-gray-600 text-gray-200' : 'bg-white border-gray-300 text-gray-900'}`}
+                            ${isDarkMode ? 'bg-slate-800 border-gray-600 text-gray-200' : 'bg-gray-100 border-gray-300 text-gray-900'}`}
                         placeholder="Enter session code to retrieve"
                         value={inputCode.toUpperCase()}
                         onChange={(e) => setInputCode(e.target.value)}
@@ -360,7 +360,7 @@ export default function App() {
                     <textarea
                         rows={6}
                         className={`border p-3 w-full rounded-lg focus:ring-2 focus:ring-blue-400 
-                        ${isDarkMode ? 'bg-slate-800 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
+                        ${isDarkMode ? 'bg-slate-800 border-gray-600 text-gray-200' : 'bg-gray-100 border-gray-300 text-gray-900'}`}
                         placeholder="Type or paste clipboard content here..."
                         value={clipboard}
                         onChange={(e) => setClipboard(e.target.value)}
