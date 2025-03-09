@@ -215,6 +215,13 @@ export default function App() {
         const response = confirm("Are you sure you want to clear clipboards?");
         if (!response) return;
         if (history.length == 0) return toast.error("No items in your clipboard history");
+        // delete all items from database with session code if file exists delete from storage
+        history.forEach(async (item) => {
+            if (item.file) {
+                await supabase.storage.from("clipboard").remove([item.file.name]);
+            }
+        });
+
         const { error } = await supabase.from("clipboard").delete().eq("session_code", sessionCode);
         if (error) {
             toast.error("An error occurred while deleting clipboard history");
@@ -448,7 +455,7 @@ export default function App() {
                                             {expandedId === item.id ? item.content : item.content.length > 180 ? item.content.substring(0, 180) + "..." : item.content.substring(0, 180)}
                                         </p>
                                         {item.file && <div className={`border flex items-center gap-1 rounded ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-100'
-                                            }  px-1 mt-3`}>
+                                            }  px-1 ${item.content.length === 0 ? 'mt-6' : 'mt-3'} `}>
                                             <div>{item.file && item.file.type === "file" ? <Paperclip size={16} className="text-green-500" /> : <FileImage size={16} className="text-rose-500" />}</div>
                                             <div>
                                                 {
