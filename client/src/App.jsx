@@ -353,6 +353,8 @@ export default function App() {
                         const file = e.target.files[0];
                         // Upload file to Supabase Storage
                         await UploadFile(file);
+                        // clear file input
+                        e.target.value = null;
                     }} />
 
                     <label htmlFor="attachfile" className={`flex w-fit items-center gap-2 cursor-pointer ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white active:bg-blue-600' : 'bg-gray-100 text-gray-800 border-gray-300 active:bg-gray-400'}  border  hover:scale-[101%] py-1.5 md:px-4 px-3 rounded-full text-sm`}>
@@ -363,6 +365,9 @@ export default function App() {
                         const file = e.target.files[0];
                         // Upload file to Supabase Storage
                         await UploadFile(file, "image");
+
+                        // clear file input
+                        e.target.value = null;
                     }} />
 
                     <label htmlFor="attachimage" className={`flex w-fit items-center gap-2 cursor-pointer border hover:scale-[101%] ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white active:bg-blue-600' : 'bg-gray-100 text-gray-800 border-gray-300 active:bg-gray-400'} py-1.5 md:px-4 px-3 rounded-full text-sm`}>
@@ -381,6 +386,9 @@ export default function App() {
                         };
                         reader.readAsText(file);
                         toast.success("File selected successfully!");
+
+                        // clear file input
+                        e.target.value = null;
                     }} />
                     <label htmlFor="file" className={`flex w-fit items-center gap-2 cursor-pointer border hover:scale-[101%] ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white active:bg-blue-600' : 'bg-gray-100 text-gray-800 border-gray-300 active:bg-gray-400'} py-1.5 md:px-4 px-3 rounded-full text-sm`}>
                         <FileUp className="text-blue-500" size={18} /> Import Text File
