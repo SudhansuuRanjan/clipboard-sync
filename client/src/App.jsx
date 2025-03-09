@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Copy, ClipboardList, Trash2, Send, Trash2Icon, ChevronDown, ChevronRight, LogOut, Moon, Sun, Edit, FileUp } from "lucide-react";
+import { Copy, ClipboardList, Trash2, Send, Trash2Icon, ChevronDown, ChevronRight, LogOut, Moon, Sun, Edit, FileUp, FileImage, Paperclip } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -14,6 +14,8 @@ export default function App() {
     const [history, setHistory] = useState([]);
     const [expandedId, setExpandedId] = useState(null);
     const [deleteOne, setDeleteOne] = useState(false);
+    const [file, setFile] = useState(null);
+    const [fileUrl, setFileUrl] = useState(null);
     const [isDarkMode, setIsDarkMode] = useState(() => {
         // Check user's system preference or saved preference
         const saved = localStorage.getItem('darkMode');
@@ -23,14 +25,11 @@ export default function App() {
 
     const fetchClipboardHistory = async () => {
         if (!sessionCode) return;
-        console.log("Fetching clipboard history");
         let { data, error } = await supabase
             .from("clipboard")
             .select("*")
             .eq("session_code", sessionCode);
-        console.log(data);
         if (!error) setClipboard(data || []);
-        console.log("Fetched clipboard history");
     };
 
     useEffect(() => {
@@ -125,6 +124,37 @@ export default function App() {
         if (!error) setHistory(data);
     };
 
+    const UploadFile = async (file, type = "file") => {
+        if (!file) return toast.error("Please select a file to upload");
+        // Upload file to Supabase Storage
+
+        // get file size if it exceeds 10MB restrict it
+        if (file.size > 10 * 1024 * 1024) {
+            return toast.error("File size exceeds 10MB. Please upload a smaller file.");
+        }
+
+        // generate 3 random characters
+        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let random = "";
+        for (let i = 0; i < 3; i++) {
+            random += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+
+        const { data, error } = await supabase.storage.from("clipboard").upload(`files/${random + file.name}`, file);
+        if (error) {
+            return toast.error("An error occurred while uploading file");
+        }
+
+        // Get the URL of the uploaded file
+        const url = `https://qthpintkaihcmklahkwf.supabase.co/storage/v1/object/public/${data.fullPath}`
+        setFileUrl({
+            url: url,
+            ...data,
+            type,
+        });
+        toast.success("File uploaded successfully!");
+    }
+
     const updateClipboard = async () => {
         if (!clipboard.trim()) return toast.error("Clipboard is empty!");
         if (clipboard.length > 15000) return toast.error("Clipboard content is too long. Please keep it under 15000 characters.");
@@ -136,7 +166,12 @@ export default function App() {
             firstTime = true;
         }
         const code = localStorage.getItem("sessionCode");
-        await supabase.from("clipboard").insert([{ session_code: code, content: clipboard }]);
+        await supabase.from("clipboard").insert([{
+            session_code: code,
+            content: clipboard,
+            fileUrl: fileUrl ? fileUrl.url : null,
+            file: fileUrl ? fileUrl : null
+        }]);
 
         if (history.length == 0 && firstTime) {
             // Manually fetch latest history to update UI immediately
@@ -151,6 +186,8 @@ export default function App() {
             }
         }
 
+        setFileUrl(null);
+        setFile(null);
         setClipboard("");
         toast.success("Clipboard updated successfully!");
     };
@@ -232,7 +269,7 @@ export default function App() {
     }, [sessionCode, isOffline]);
 
     return (
-        <div className={`flex flex-col items-center min-h-screen md:p-6 p-3 md:pt-16 pt-16
+        <div className={`flex relative flex-col items-center min-h-screen md:p-6 p-3 md:pt-16 pt-16
             ${isDarkMode ? 'bg-gray-950 text-gray-200' : 'bg-gray-100 text-gray-900'}`}>
             <Toaster
                 toastOptions={{
@@ -307,24 +344,70 @@ export default function App() {
                     onChange={(e) => setClipboard(e.target.value)}
                 />
 
-                <input type="file" className="hidden" id="file" accept=".txt" onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        if(!e.target.result) return;
-                        if(e.target.result.length > 15000) return toast.error("File content is too long. Please keep it under 15000 characters.");
-                        setClipboard(e.target.result);
-                    };
-                    reader.readAsText(file);
-                }} />
-                <label htmlFor="file" className={`flex w-fit items-center gap-2 cursor-pointer bg-gray-900 border border-gray-700  hover:scale-[101%] active:bg-blue-700 text-white py-2 px-6 rounded-full text-sm`}>
-                    <FileUp className="text-blue-500" size={18} /> Import Text File
-                </label>
+                <div className="flex flex-wrap md:gap-2 gap-1.5">
+                    <input type="file" className="hidden" id="attachfile" accept=".txt" onChange={async (e) => {
+                        const file = e.target.files[0];
+                        // Upload file to Supabase Storage
+                        await UploadFile(file);
+                    }} />
+
+                    <label htmlFor="attachfile" className={`flex w-fit items-center gap-2 cursor-pointer ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white active:bg-blue-600' : 'bg-gray-100 text-gray-800 border-gray-300 active:bg-gray-400'}  border  hover:scale-[101%] py-1.5 md:px-4 px-3 rounded-full text-sm`}>
+                        <Paperclip className="text-green-500" size={18} /> Attach File
+                    </label>
+
+                    <input type="file" className="hidden" id="attachimage" accept="image/*" onChange={async (e) => {
+                        const file = e.target.files[0];
+                        // Upload file to Supabase Storage
+                        await UploadFile(file, "image");
+                    }} />
+
+                    <label htmlFor="attachimage" className={`flex w-fit items-center gap-2 cursor-pointer border hover:scale-[101%] ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white active:bg-blue-600' : 'bg-gray-100 text-gray-800 border-gray-300 active:bg-gray-400'} py-1.5 md:px-4 px-3 rounded-full text-sm`}>
+                        <FileImage className="text-rose-500" size={18} /> Attach Image
+                    </label>
+
+                    <input type="file" className="hidden" id="file" accept=".txt" onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        setFile(file);
+
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            const text = reader.result;
+                            setClipboard(text);
+                        };
+                        reader.readAsText(file);
+                        toast.success("File selected successfully!");
+                    }} />
+                    <label htmlFor="file" className={`flex w-fit items-center gap-2 cursor-pointer border hover:scale-[101%] ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white active:bg-blue-600' : 'bg-gray-100 text-gray-800 border-gray-300 active:bg-gray-400'} py-1.5 md:px-4 px-3 rounded-full text-sm`}>
+                        <FileUp className="text-blue-500" size={18} /> Import Text File
+                    </label>
+                </div>
+
+
+                {fileUrl &&
+                    <div className={`flex gap-2 items-center p-2 py-1.5 rounded-lg 
+                            ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
+                        <FileUp size={18} className="text-blue-500" />
+                        <p className={`flex-1 truncate text-sm ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{fileUrl.path}</p>
+                        <button className="text-red-500 active:text-red-700 active:scale-95" onClick={() => {
+                            // delete file from storage
+                            supabase.storage.from("clipboard").remove([fileUrl.name]);
+                            setFileUrl(null);
+                            setFile(null);
+                        }}><Trash2 size={19} /></button>
+                    </div>
+                }
+
 
                 <div className="flex gap-2 flex-wrap">
                     <button className="flex-1 min-w-32 flex items-center justify-center transition gap-2 bg-blue-500 hover:bg-blue-600 hover:scale-[101%] active:bg-blue-700 text-white py-2 rounded-lg" onClick={addClipboardText}><ClipboardList size={18} /> Paste Text</button>
-                    <button className="flex-1 min-w-32 flex items-center justify-center transition gap-2 bg-red-500 hover:bg-red-600 hover:scale-[101%] active:bg-red-700 text-white py-2 rounded-lg" onClick={() => { setClipboard(""); toast.success("Clipboard cleared successfully!"); }}><Trash2 size={18} /> Clear</button>
+                    <button className="flex-1 min-w-32 flex items-center justify-center transition gap-2 bg-red-500 hover:bg-red-600 hover:scale-[101%] active:bg-red-700 text-white py-2 rounded-lg" onClick={() => {
+                        setClipboard("");
+                        supabase.storage.from("clipboard").remove([fileUrl.name]);
+                        setFileUrl(null);
+                        setFile(null);
+                        toast.success("Clipboard cleared successfully!");
+                    }}><Trash2 size={18} /> Clear</button>
                     <button className="flex-1 min-w-48 flex items-center justify-center transition gap-2 bg-green-500 hover:bg-green-600 hover:scale-[101%] active:bg-green-700 text-white py-2 rounded-lg" onClick={updateClipboard}><Send size={18} /> Send to Clipboard</button>
                 </div>
             </div>
@@ -347,10 +430,27 @@ export default function App() {
                                     <button className="text-blue-500 transition" onClick={() => toggleExpand(item.id)}>
                                         {!expandedId ? <ChevronRight size={18} /> : <ChevronDown size={19} />}
                                     </button>
-                                    <p onClick={() => toggleExpand(item.id)} className={`text-sm flex-1 cursor-pointer truncate text-wrap w-fit
+                                    <div className="flex flex-col">
+                                        <p onClick={() => toggleExpand(item.id)} className={`text-sm flex-1 cursor-pointer truncate text-wrap w-fit
                                         ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                                        {expandedId === item.id ? item.content : item.content.length > 180 ? item.content.substring(0, 180) + "..." : item.content.substring(0, 180)}
-                                    </p>
+                                            {expandedId === item.id ? item.content : item.content.length > 180 ? item.content.substring(0, 180) + "..." : item.content.substring(0, 180)}
+                                        </p>
+                                        <div className={`border flex items-center gap-1 border-gray-600 rounded ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-100'
+                                            }  px-1 mt-3`}>
+                                            <div>{item.file && item.file.type === "file" ? <Paperclip size={16} className="text-green-500" /> : <FileImage size={16} className="text-rose-500" />}</div>
+                                            <div>
+                                                {
+                                                    item.file && <a href={item.fileUrl}
+                                                        className="text-blue-500 text-sm hover:underline"
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                    >
+                                                        {item.file.path}
+                                                    </a>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <button className="text-green-500 active:text-green-700 active:scale-95" onClick={() => handleEdit(item.id)}><Edit size={19} /></button>
