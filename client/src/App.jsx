@@ -126,34 +126,39 @@ export default function App() {
 
     const UploadFile = async (file, type = "file") => {
         if (!file) return toast.error("Please select a file to upload");
-        // Upload file to Supabase Storage
 
-        // get file size if it exceeds 10MB restrict it
+        // Check file size
         if (file.size > 10 * 1024 * 1024) {
             return toast.error("File size exceeds 10MB. Please upload a smaller file.");
         }
 
-        // generate 3 random characters
+        // Generate 3 random characters
         const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         let random = "";
         for (let i = 0; i < 3; i++) {
             random += characters.charAt(Math.floor(Math.random() * characters.length));
         }
 
-        const { data, error } = await supabase.storage.from("clipboard").upload(`files/${random + file.name}`, file);
-        if (error) {
-            return toast.error("An error occurred while uploading file");
-        }
+        // Show loading toast
+        const toastId = toast.loading("Uploading file...");
 
-        // Get the URL of the uploaded file
-        const url = `https://qthpintkaihcmklahkwf.supabase.co/storage/v1/object/public/${data.fullPath}`
-        setFileUrl({
-            url: url,
-            ...data,
-            type,
-        });
-        toast.success("File uploaded successfully!");
-    }
+        try {
+            // Upload file to Supabase Storage
+            const { data, error } = await supabase.storage.from("clipboard").upload(`files/${random + file.name}`, file);
+
+            if (error) throw error;
+
+            // Get the URL of the uploaded file
+            const url = `https://qthpintkaihcmklahkwf.supabase.co/storage/v1/object/public/${data.fullPath}`;
+            setFileUrl({ url, ...data, type });
+
+            // Update toast to success
+            toast.success("File uploaded successfully!", { id: toastId });
+        } catch (error) {
+            // Update toast to error
+            toast.error("An error occurred while uploading file", { id: toastId });
+        }
+    };
 
     const updateClipboard = async () => {
         // if fileURL exists, then it is a file so text can be empty
@@ -414,6 +419,8 @@ export default function App() {
                             supabase.storage.from("clipboard").remove([fileUrl.name]);
                             setFileUrl(null);
                             setFile(null);
+
+                            toast.success("File removed successfully!");
                         }}><Trash2 size={19} /></button>
                     </div>
                 }
@@ -465,7 +472,9 @@ export default function App() {
                                                         target="_blank"
                                                         rel="noreferrer"
                                                     >
-                                                        {item.file.path}
+
+                                                        {/* truncate file path (include first 5 letters last 2 letters with .extention if filename is large else show it in full) */}
+                                                        {item.file.path.length > 34 ? item.file.path.substring(6, 10) + "..." + item.file.path.substring(item.file.path.length - 7) : item.file.path.substring(6) }
                                                     </a>
                                                 }
                                             </div>
