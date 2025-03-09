@@ -463,7 +463,7 @@ export default function App() {
                                 ${isDarkMode ? 'bg-slate-800' : 'bg-gray-50'}`}>
                                 <div className="flex gap-1 items-start">
                                     <button aria-label="Expand Content" className="text-blue-500 transition" onClick={() => toggleExpand(item.id)}>
-                                        {!expandedId ? <ChevronRight size={18} /> : <ChevronDown size={19} />}
+                                        {expandedId !== item.id ? <ChevronRight size={18} /> : <ChevronDown size={19} />}
                                     </button>
                                     <div className="flex flex-col">
                                         <p onClick={() => toggleExpand(item.id)} className={`text-sm flex-1 cursor-pointer truncate text-wrap w-fit
