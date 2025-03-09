@@ -447,7 +447,7 @@ export default function App() {
                                         ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                                             {expandedId === item.id ? item.content : item.content.length > 180 ? item.content.substring(0, 180) + "..." : item.content.substring(0, 180)}
                                         </p>
-                                        {item.file && <div className={`border flex items-center gap-1 border-gray-600 rounded ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-100'
+                                        {item.file && <div className={`border flex items-center gap-1 rounded ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-100'
                                             }  px-1 mt-3`}>
                                             <div>{item.file && item.file.type === "file" ? <Paperclip size={16} className="text-green-500" /> : <FileImage size={16} className="text-rose-500" />}</div>
                                             <div>
