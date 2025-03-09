@@ -156,7 +156,8 @@ export default function App() {
     }
 
     const updateClipboard = async () => {
-        if (!clipboard.trim()) return toast.error("Clipboard is empty!");
+        // if fileURL exists, then it is a file so text can be empty
+        if (!clipboard && !fileUrl) return toast.error("Please enter some text to update clipboard");
         if (clipboard.length > 15000) return toast.error("Clipboard content is too long. Please keep it under 15000 characters.");
 
         let firstTime = false;
@@ -234,7 +235,7 @@ export default function App() {
         setClipboard(content);
         // delete item from database
         await supabase.from("clipboard").delete().eq("id", id);
-        
+
         // set file if exists
         setFileUrl(history.find((item) => item.id === id).file);
 
