@@ -459,7 +459,7 @@ export default function App() {
                     </div>
                     <ul className="mt-4 space-y-2">
                         {history.map((item, index) => (
-                            <li key={item.id} className={`flex justify-between items-start p-2 py-2.5 gap-2 rounded-lg shadow 
+                            <li key={item.id} className={`flex relative justify-between pb-6 items-start p-2 py-2.5 gap-2 rounded-lg shadow 
                                 ${isDarkMode ? 'bg-slate-800' : 'bg-gray-50'}`}>
                                 <div className="flex gap-1 items-start">
                                     <button aria-label="Expand Content" className="text-blue-500 transition" onClick={() => toggleExpand(item.id)}>
@@ -493,6 +493,10 @@ export default function App() {
                                     <button aria-label="Edit Clipboard" className="text-green-500 active:text-green-700 active:scale-95" onClick={() => handleEdit(item.id)}><Edit size={19} /></button>
                                     <button aria-label="Copy Content" className="text-blue-500 active:text-blue-700 active:scale-95" onClick={() => copyToClipboard(item.content)}><Copy size={19} /></button>
                                 </div>
+
+                                <p className={`text-xs absolute bottom-1 right-1.5 font-medium text-gray-400`}>
+                                    {new Date(item.created_at).toLocaleString()}
+                                </p>
                             </li>
                         ))}
                     </ul>
