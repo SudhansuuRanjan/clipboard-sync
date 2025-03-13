@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Copy, ClipboardList, Trash2, Send, Trash2Icon, ChevronDown, ChevronRight, LogOut, Moon, Sun, Edit, FileUp, FileImage, Paperclip } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
 import "./App.css";
+import { compressImage } from "./compressedFileUpload";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -144,6 +145,16 @@ export default function App() {
 
         // Show loading toast
         const toastId = toast.loading("Uploading file...");
+
+        // Compress image if it is an image
+        if (file.type.includes("image")) {
+            try {
+                const compressedFile = await compressImage(file);
+                file = compressedFile;
+            } catch (error) {
+                return toast.error("An error occurred while compressing image");
+            }
+        }
 
         try {
             // Upload file to Supabase Storage
@@ -306,7 +317,7 @@ export default function App() {
             <button
                 onClick={toggleDarkMode}
                 aria-label="Toggle Dark Mode"
-                className="fixed top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 
+                className="fixed top-4 z-[100] right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 
                 text-gray-900 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
             >
                 {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
