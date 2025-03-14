@@ -277,9 +277,9 @@ export default function App() {
     }
 
     
-    const getCounter=async()=>{
-        const {data,error}=await supabase.from("counter").select("*");
-        if(error) throw error;
+    const getCounter = async () => {
+        const { data, error } = await supabase.from("counter").select("*");
+        if(error) toast.error("Error fetching Visitor Counts");
         setTotalVisitor(data[0].total);
         setUniqueVisitor(data[0].unique);
         return data;
@@ -306,10 +306,10 @@ export default function App() {
         const date = new Date();
         date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days
         const cookieOptions={
-            path:"/",
-            expires:date.toUTCString(),
-            sameSite:"strict",
-            secure:true
+            path: "/",
+            expires: date.toUTCString(),
+            sameSite: "strict",
+            secure: true
         }
 
         // Convert the cookie options to a string
@@ -321,28 +321,27 @@ export default function App() {
         document.cookie = `visited=true; ${cookieString}`;
     }
 
-    const getVisitedCookie=()=>{
-        const cookies=document.cookie.split(';');
-        const visitedCookie=cookies.filter(cookie=>cookie.includes("visited"));
-        if(visitedCookie.length>0){
+    const getVisitedCookie = () =>{
+        const cookies = document.cookie.split(';');
+        const visitedCookie = cookies.filter(cookie => cookie.includes("visited"));
+        if(visitedCookie.length > 0){
             return true;
         }
-        else{
-            return false;
-        }
+
+        return false;
     }
     
-    const uniqueCounter=async()=>{
+    const uniqueCounter = async () => {
         try{
-            const res=await getCounter();
+            const res = await getCounter();
             const data = {
-                "unique": res[0].unique + 1,
-                "total": res[0].total + 1,
+                unique: res[0].unique + 1,
+                total: res[0].total + 1,
             }
             const res2 = await updateDocument("counter", res[0].id, data);
             return res2;
-        }catch(err){
-            throw new Error(err.message);
+        } catch(err){
+            toast.error(err.message);
         }
     }
 
@@ -350,7 +349,7 @@ export default function App() {
         try {
             const res = await getCounter();
             if (!res || !res[0]) {
-                console.error("No counter data found");
+                toast.error("No counter data found");
                 return null;
             }
             
@@ -363,20 +362,20 @@ export default function App() {
   
             return updatedCounter;
         } catch (err) {
-            throw new Error(err.message);
+            toast.error(err.message);
         }
     }
 
-    const updateCounter=async()=>{
-        try{
-            const visited=await getVisitedCookie();
+    const updateCounter = async () => {
+        try {
+            const visited = await getVisitedCookie();
             if(visited){
-                const res=await totalCounter();
+                const res = await totalCounter();
                 return res;
             }
             else{
                 setVisitedCookie();
-                const res=await uniqueCounter();
+                const res = await uniqueCounter();
                 return res;
             }
         }
@@ -385,21 +384,10 @@ export default function App() {
         }
     }
 
-    const counter = async () => {
-        await updateCounter();
-    }
-
     
-
-
-    useEffect(()=>{
-        counter();
-    },[]);
-
-
-
     useEffect(() => {
         if (!sessionCode) return;
+        updateCounter();
         const channel = supabase
             .channel("clipboard")
             .on("postgres_changes", { event: "*", schema: "public", table: "clipboard" }, (payload) => {
