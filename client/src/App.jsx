@@ -5,6 +5,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import "./App.css";
 import { compressImage } from "./compressedFileUpload";
 import CountUp from 'react-countup';
+import { useQuery } from "@tanstack/react-query"
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -276,10 +277,10 @@ export default function App() {
         toast.success("Clipboard content added to editor!");
     }
 
-    
+
     const getCounter = async () => {
         const { data, error } = await supabase.from("counter").select("*");
-        if(error) toast.error("Error fetching Visitor Counts");
+        if (error) toast.error("Error fetching Visitor Counts");
         setTotalVisitor(data[0].total);
         setUniqueVisitor(data[0].unique);
         return data;
@@ -302,10 +303,10 @@ export default function App() {
         }
     }
 
-    const setVisitedCookie=async()=>{
+    const setVisitedCookie = async () => {
         const date = new Date();
         date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days
-        const cookieOptions={
+        const cookieOptions = {
             path: "/",
             expires: date.toUTCString(),
             sameSite: "strict",
@@ -314,25 +315,25 @@ export default function App() {
 
         // Convert the cookie options to a string
         const cookieString = Object.entries(cookieOptions)
-        .map(([key, value]) => `${key}=${value}`)
-        .join('; ');
+            .map(([key, value]) => `${key}=${value}`)
+            .join('; ');
 
 
         document.cookie = `visited=true; ${cookieString}`;
     }
 
-    const getVisitedCookie = () =>{
+    const getVisitedCookie = () => {
         const cookies = document.cookie.split(';');
         const visitedCookie = cookies.filter(cookie => cookie.includes("visited"));
-        if(visitedCookie.length > 0){
+        if (visitedCookie.length > 0) {
             return true;
         }
 
         return false;
     }
-    
+
     const uniqueCounter = async () => {
-        try{
+        try {
             const res = await getCounter();
             const data = {
                 unique: res[0].unique + 1,
@@ -340,7 +341,7 @@ export default function App() {
             }
             const res2 = await updateDocument("counter", res[0].id, data);
             return res2;
-        } catch(err){
+        } catch (err) {
             toast.error(err.message);
         }
     }
@@ -352,42 +353,49 @@ export default function App() {
                 toast.error("No counter data found");
                 return null;
             }
-            
+
             const data = {
                 unique: res[0].unique,
                 total: res[0].total + 1
             };
-        
+
             const updatedCounter = await updateDocument("counter", res[0].id, data);
-  
+
             return updatedCounter;
         } catch (err) {
-            toast.error(err.message);
         }
     }
 
     const updateCounter = async () => {
         try {
-            const visited = await getVisitedCookie();
-            if(visited){
-                const res = await totalCounter();
-                return res;
-            }
-            else{
+            const visited = getVisitedCookie();
+            if (visited) {
+                await totalCounter();
+                return true;
+            } else {
                 setVisitedCookie();
-                const res = await uniqueCounter();
-                return res;
+                await uniqueCounter();
+                return true;
             }
         }
-        catch(error){
-            throw new Error(error.message);
+        catch (error) {
+            return true;
         }
     }
 
-    
+    const { data } = useQuery({
+        queryKey: "counter",
+        queryFn: updateCounter,
+        enabled: true,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        retry: 2,
+        refetchInterval: 1000 * 60 * 5
+    })
+
+
     useEffect(() => {
         if (!sessionCode) return;
-        updateCounter();
         const channel = supabase
             .channel("clipboard")
             .on("postgres_changes", { event: "*", schema: "public", table: "clipboard" }, (payload) => {
@@ -405,7 +413,7 @@ export default function App() {
                 }
             })
             .subscribe();
-        
+
         // clear console 
         console.clear();
 
@@ -627,20 +635,16 @@ export default function App() {
                 </div>
             )}
 
-            <footer className={`mt-6 text-center text-sm 
-                ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    <div>
-                    <div className="mb-5">
-                        <div className='bg-[#091218] border-gray-800 border px-4 pr-2 py-1.5 rounded-xl lg:order-2 md:order-2 order-1'>
-                <div className='flex items-center gap-2'><span className='text-gray-400'>Total Visitors : </span> <div className='w-10 text-sky-600'><CountUp end={totalVisitor} enableScrollSpy={true} /></div></div>
-                <div className='flex items-center gap-2'><span className='text-gray-400'>Unique Visitors : </span> <div className='w-10 text-sky-600'><CountUp end={uniqueVisitor} enableScrollSpy={true} /></div></div>
-              </div>
-                        </div>
-                        <div>
-                            Made with ❤️ by <a href="https://sudhanshur.vercel.app" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">Sudhanshu Ranjan</a>
-                        </div>
-                        
+            <footer className={`mt-6 text-center text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <div className="flex flex-col items-center gap-3">
+                    <div className={`${isDarkMode ? 'bg-[#091218] border-gray-800' : 'bg-gray-100 border-gray-300'} border w-[12rem] px-4 text-sm scale-[85%] pr-2 py-1.5 rounded-xl mt-2`}>
+                        <div className='flex items-center gap-2'><span className='text-gray-500'>Unique Visitors : </span> <div className='w-5 text-blue-500'><CountUp end={uniqueVisitor} enableScrollSpy={true} /></div></div>
+                        <div className='flex items-center gap-2'><span className='text-gray-500'>Total Visitors : </span> <div className='w-5 text-blue-500'><CountUp end={totalVisitor} enableScrollSpy={true} /></div></div>
                     </div>
+                    <div>
+                        Made with ❤️ by <a href="https://sudhanshur.vercel.app" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">Sudhanshu Ranjan</a>
+                    </div>
+                </div>
             </footer>
         </div>
     );
