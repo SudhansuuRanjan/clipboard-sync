@@ -82,7 +82,7 @@ export default function App() {
             })();
         }
 
-        console.clear();
+        //console.clear();
     }, []);
 
     const createSession = async () => {
@@ -280,7 +280,7 @@ export default function App() {
 
     const getCounter = async () => {
         const { data, error } = await supabase.from("counter").select("*");
-        if (error) toast.error("Error fetching Visitor Counts");
+        if (error) console.log(error);
         setTotalVisitor(data[0].total);
         setUniqueVisitor(data[0].unique);
         return data;
@@ -292,10 +292,10 @@ export default function App() {
                 .from(collection)
                 .update(data)
                 .eq("id", id)
-                .select()
-                .single();
+                .select("*");
+
             if (error) {
-                throw new Error(error.message);
+                console.log(error);
             }
             return updatedData;
         } catch (err) {
@@ -339,7 +339,7 @@ export default function App() {
                 unique: res[0].unique + 1,
                 total: res[0].total + 1,
             }
-            const res2 = await updateDocument("counter", res[0].id, data);
+            const res2 = await updateDocument("counter", 1, data);
             return res2;
         } catch (err) {
             toast.error(err.message);
@@ -359,10 +359,11 @@ export default function App() {
                 total: res[0].total + 1
             };
 
-            const updatedCounter = await updateDocument("counter", res[0].id, data);
+            const updatedCounter = await updateDocument("counter", 1, data);
 
             return updatedCounter;
         } catch (err) {
+            console.log(err)
         }
     }
 
@@ -384,7 +385,7 @@ export default function App() {
     }
 
     const { data } = useQuery({
-        queryKey: "counter",
+        queryKey: ["counter"],
         queryFn: updateCounter,
         enabled: true,
         refetchOnWindowFocus: false,
@@ -415,7 +416,7 @@ export default function App() {
             .subscribe();
 
         // clear console 
-        console.clear();
+        // console.clear();
 
         return () => {
             supabase.removeChannel(channel);
