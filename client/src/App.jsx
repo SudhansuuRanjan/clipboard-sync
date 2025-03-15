@@ -639,8 +639,8 @@ export default function App() {
             <footer className={`mt-6 text-center text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 <div className="flex flex-col items-center gap-3">
                     <div className={`${isDarkMode ? 'bg-[#091218] border-gray-800' : 'bg-gray-100 border-gray-300'} border w-[12rem] px-4 text-sm scale-[85%] pr-2 py-1.5 rounded-xl mt-2`}>
-                        <div className='flex items-center gap-2'><span className='text-gray-500'>Unique Visitors : </span> <div className='w-5 text-blue-500'><CountUp end={uniqueVisitor} enableScrollSpy={true} /></div></div>
-                        <div className='flex items-center gap-2'><span className='text-gray-500'>Total Visitors : </span> <div className='w-5 text-blue-500'><CountUp end={totalVisitor} enableScrollSpy={true} /></div></div>
+                        <div className='flex items-center gap-2'><span className='text-gray-500'>Unique Visits : </span> <div className='w-5 text-blue-500'><CountUp end={uniqueVisitor} enableScrollSpy={true} /></div></div>
+                        <div className='flex items-center gap-2'><span className='text-gray-500'>Total Visits : </span> <div className='w-5 text-blue-500'><CountUp end={totalVisitor} enableScrollSpy={true} /></div></div>
                     </div>
                     <div>
                         Made with ❤️ by <a href="https://sudhanshur.vercel.app" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">Sudhanshu Ranjan</a>
