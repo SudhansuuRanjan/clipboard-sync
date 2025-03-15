@@ -82,7 +82,7 @@ export default function App() {
             })();
         }
 
-        //console.clear();
+        console.clear();
     }, []);
 
     const createSession = async () => {
@@ -416,7 +416,7 @@ export default function App() {
             .subscribe();
 
         // clear console 
-        // console.clear();
+        console.clear();
 
         return () => {
             supabase.removeChannel(channel);
