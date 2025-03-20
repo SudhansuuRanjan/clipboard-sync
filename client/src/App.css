@@ -15,3 +15,13 @@
 ::-webkit-scrollbar-track {
     background: #353535 !important;
 }
+
+.word-wrap {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.link-wrap {
+    white-space: normal;
+    word-break: break-all;
+}

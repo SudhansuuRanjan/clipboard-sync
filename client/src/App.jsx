@@ -394,6 +394,13 @@ export default function App() {
         refetchInterval: 1000 * 60 * 5
     })
 
+    const convertLinksToAnchor = (text) => {
+        const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+        return text.replace(urlRegex, (url) => {
+            let hyperlink = url.startsWith("www.") ? `https://${url}` : url;
+            return `<a href="${hyperlink}" target="_blank" rel="noopener noreferrer" class="text-blue-500 underline">${url}</a>`;
+        });
+    };
 
     useEffect(() => {
         if (!sessionCode) return;
@@ -599,10 +606,19 @@ export default function App() {
                                         {expandedId !== item.id ? <ChevronRight size={18} /> : <ChevronDown size={19} />}
                                     </button>
                                     <div className="flex flex-col">
-                                        <p onClick={() => toggleExpand(item.id)} className={`text-sm flex-1 cursor-pointer truncate text-wrap w-fit
-                                        ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                                            {expandedId === item.id ? item.content : item.content.length > 180 ? item.content.substring(0, 180) + "..." : item.content.substring(0, 180)}
-                                        </p>
+                                        <p
+                                            onClick={() => toggleExpand(item.id)}
+                                            className={`text-sm flex-1 word-wrap link-wrap cursor-pointer truncate text-wrap w-fit
+  ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                                            dangerouslySetInnerHTML={{
+                                                __html: expandedId === item.id
+                                                    ? convertLinksToAnchor(item.content)
+                                                    : item.content.length > 180
+                                                        ? convertLinksToAnchor(item.content.substring(0, 180)) + "..."
+                                                        : convertLinksToAnchor(item.content.substring(0, 180))
+                                            }}
+                                        ></p>
+
                                         {item.file && <div className={`border flex items-center gap-1 rounded ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-100'
                                             }  px-1 ${item.content.length === 0 ? 'mt-6' : 'mt-3'} `}>
                                             <div>{item.file && item.file.type === "file" ? <Paperclip size={16} className="text-green-500" /> : <FileImage size={16} className="text-rose-500" />}</div>
