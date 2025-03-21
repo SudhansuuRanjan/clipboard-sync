@@ -442,6 +442,10 @@ export default function App() {
         setSearchResults(results);
     }
 
+    useEffect(() => {
+        setSearchResults(history);
+    }, [history]);
+
     return (
         <div className={`flex relative flex-col items-center min-h-screen md:p-6 p-3 md:pt-16 pt-16
             ${isDarkMode ? 'bg-gray-950 text-gray-200' : 'bg-gray-200 text-gray-900'}`}>
