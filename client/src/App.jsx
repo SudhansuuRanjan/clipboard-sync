@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Copy, ClipboardList, Trash2, Send, Trash2Icon, ChevronDown, ChevronRight, LogOut, Moon, Sun, Edit, FileUp, FileImage, Paperclip } from "lucide-react";
+import { Copy, ClipboardList, Trash2, Send, Trash2Icon, ChevronDown, ChevronRight, LogOut, Moon, Sun, Edit, FileUp, FileImage, Paperclip, Search, Share } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
 import "./App.css";
 import { compressImage } from "./compressedFileUpload";
@@ -28,6 +28,8 @@ export default function App() {
         return saved ? JSON.parse(saved) : window.matchMedia('(prefers-color-scheme: dark)').matches;
     });
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
+    const [searchKeyword, setSearchKeyword] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
 
     const fetchClipboardHistory = async () => {
         if (!sessionCode) return;
@@ -430,6 +432,16 @@ export default function App() {
         };
     }, [sessionCode, isOffline]);
 
+    const handleSearch = (e) => {
+        setSearchKeyword(e.target.value);
+        if (e.target.value.trim() === "") {
+            setSearchResults(history);
+            return;
+        }
+        const results = history.filter((item) => item.content.toLowerCase().includes(e.target.value.toLowerCase()));
+        setSearchResults(results);
+    }
+
     return (
         <div className={`flex relative flex-col items-center min-h-screen md:p-6 p-3 md:pt-16 pt-16
             ${isDarkMode ? 'bg-gray-950 text-gray-200' : 'bg-gray-200 text-gray-900'}`}>
@@ -443,14 +455,33 @@ export default function App() {
             />
 
             {/* Dark Mode Toggle Button */}
-            <button
-                onClick={toggleDarkMode}
-                aria-label="Toggle Dark Mode"
-                className="fixed top-4 z-[100] right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 
+            <div className="fixed top-4 z-[100] right-4 flex gap-2">
+                <button
+                    onClick={
+                        async () => {
+                            await navigator.share({
+                                title: "Clipboard Sync",
+                                text: "Join my clipboard session to sync clipboard content between devices",
+                                url: window.location.href
+                            })
+                        }
+                    }
+                    aria-label="Toggle Dark Mode"
+                    className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 
                 text-gray-900 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-            >
-                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
+                >
+                    <Share size={20} />
+                </button>
+
+                <button
+                    onClick={toggleDarkMode}
+                    aria-label="Toggle Dark Mode"
+                    className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 
+                text-gray-900 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                >
+                    {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+            </div>
 
             <div className={`max-w-5xl lg:max-w-4xl md:max-w-3xl w-full shadow-lg rounded-2xl md:p-6 p-4 space-y-5 
                 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
@@ -488,7 +519,7 @@ export default function App() {
 
                 <div className="flex gap-2">
                     <input
-                        className={`border p-2 py-1.5 rounded-lg flex-1 
+                        className={`border px-2.5 p-2 py-1.5 rounded-lg flex-1 
                             ${isDarkMode ? 'bg-slate-800 border-gray-600 text-gray-200' : 'bg-gray-100 border-gray-300 text-gray-900'}`}
                         placeholder="Enter session code to retrieve"
                         value={inputCode.toUpperCase()}
@@ -597,8 +628,17 @@ export default function App() {
                         </h2>
                         <button aria-label="Delete All Clipboards" className="text-red-500 active:text-red-700 active:scale-95 flex gap-2" onClick={deleteAll}><Trash2Icon size={19} /></button>
                     </div>
+                    <div className="my-4 w-full relative">
+                        <input className={`border w-full p-2 px-2.5 py-1.5 rounded-lg flex-1 
+                            ${isDarkMode ? 'bg-slate-800 border-gray-600 text-gray-200' : 'bg-gray-100 border-gray-300 text-gray-900'}`}
+                            placeholder="Search Clipboard History"
+                            value={searchKeyword}
+                            onChange={handleSearch}
+                            type="search" name="search_keywords" id="search_keyword" />
+                        <Search size={20} className="absolute top-2 right-3 text-gray-400" />
+                    </div>
                     <ul className="mt-4 space-y-2">
-                        {history.map((item, index) => (
+                        {searchResults.map((item, index) => (
                             <li key={item.id} className={`flex relative justify-between pb-6 items-start p-2 py-2.5 gap-2 rounded-lg shadow 
                                 ${isDarkMode ? 'bg-slate-800' : 'bg-gray-50'}`}>
                                 <div className="flex gap-1 items-start">
