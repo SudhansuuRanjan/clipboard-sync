@@ -1,29 +1,25 @@
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { Copy, ClipboardList, Trash2, Send, Trash2Icon, ChevronDown, ChevronRight, LogOut, Moon, Sun, Edit, FileUp, FileImage, Paperclip, Search, Share } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
 import "./App.css";
 import { compressImage } from "./compressedFileUpload";
 import CountUp from 'react-countup';
 import { useQuery } from "@tanstack/react-query"
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+import { createSession } from "./service/doc.service";
+import supabase from "./config/supabase";
+import { convertLinksToAnchor } from "./utils";
 
 export default function App() {
     const [sessionCode, setSessionCode] = useState("");
     const [inputCode, setInputCode] = useState("");
-    const [clipboard, setClipboard] = useState("");
+    const [clipboard, setClipboard] = useState(sessionStorage.getItem("clipboard") || "");
     const [history, setHistory] = useState([]);
     const [expandedId, setExpandedId] = useState(null);
     const [deleteOne, setDeleteOne] = useState(false);
-    const [file, setFile] = useState(null);
     const [fileUrl, setFileUrl] = useState(null);
     const [totalVisitor, setTotalVisitor] = useState(0);
     const [uniqueVisitor, setUniqueVisitor] = useState(0);
     const [isDarkMode, setIsDarkMode] = useState(() => {
-        // Check user's system preference or saved preference
         const saved = localStorage.getItem('darkMode');
         return saved ? JSON.parse(saved) : window.matchMedia('(prefers-color-scheme: dark)').matches;
     });
@@ -86,19 +82,6 @@ export default function App() {
 
         console.clear();
     }, []);
-
-    const createSession = async () => {
-        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        let newCode = "";
-        for (let i = 0; i < 5; i++) {
-            newCode += characters.charAt(Math.floor(Math.random() * characters.length));
-        }
-
-        await supabase.from("sessions").insert([{ code: newCode }]);
-
-        setSessionCode(newCode);
-        localStorage.setItem("sessionCode", newCode);
-    };
 
     const joinSession = async () => {
         if (!inputCode.trim()) return toast.error("Please enter a session code");
@@ -213,7 +196,6 @@ export default function App() {
         }
 
         setFileUrl(null);
-        setFile(null);
         setClipboard("");
         toast.success("Clipboard updated successfully!");
     };
@@ -282,7 +264,7 @@ export default function App() {
 
     const getCounter = async () => {
         const { data, error } = await supabase.from("counter").select("*");
-        if (error) console.log(error);
+        if (error) return console.log(error);
         setTotalVisitor(data[0].total);
         setUniqueVisitor(data[0].unique);
         return data;
@@ -297,7 +279,7 @@ export default function App() {
                 .select("*");
 
             if (error) {
-                console.log(error);
+                return console.log(error);
             }
             return updatedData;
         } catch (err) {
@@ -396,14 +378,6 @@ export default function App() {
         refetchInterval: 1000 * 60 * 5
     })
 
-    const convertLinksToAnchor = (text) => {
-        const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
-        return text.replace(urlRegex, (url) => {
-            let hyperlink = url.startsWith("www.") ? `https://${url}` : url;
-            return `<a href="${hyperlink}" target="_blank" rel="noopener noreferrer" class="text-blue-500 underline">${url}</a>`;
-        });
-    };
-
     useEffect(() => {
         if (!sessionCode) return;
         const channel = supabase
@@ -424,7 +398,6 @@ export default function App() {
             })
             .subscribe();
 
-        // clear console 
         console.clear();
 
         return () => {
@@ -538,8 +511,14 @@ export default function App() {
                         className={`border p-3 w-full rounded-lg focus:ring-2 focus:ring-blue-400 
                         ${isDarkMode ? 'bg-slate-800 border-gray-600 text-gray-200' : 'bg-gray-100 border-gray-300 text-gray-900'}`}
                         placeholder="Type or paste clipboard content here..."
-                        value={clipboard}
-                        onChange={(e) => setClipboard(e.target.value)}
+                        value={
+                            clipboard
+                        }
+                        onChange={(e) => {
+                            // save input value to session storage
+                            setClipboard(e.target.value);
+                            sessionStorage.setItem("clipboard", e.target.value);
+                        }}
                     />
 
                     <div className="flex flex-wrap md:gap-2 gap-1.5">
@@ -571,7 +550,6 @@ export default function App() {
                         <input type="file" className="hidden" id="file" accept=".txt" onChange={(e) => {
                             const file = e.target.files[0];
                             if (!file) return;
-                            setFile(file);
 
                             const reader = new FileReader();
                             reader.onload = () => {
@@ -601,7 +579,6 @@ export default function App() {
                             // delete file from storage
                             supabase.storage.from("clipboard").remove([fileUrl.name]);
                             setFileUrl(null);
-                            setFile(null);
 
                             toast.success("File removed successfully!");
                         }}><Trash2 size={19} /></button>
@@ -615,7 +592,6 @@ export default function App() {
                         setClipboard("");
                         supabase.storage.from("clipboard").remove([fileUrl.name]);
                         setFileUrl(null);
-                        setFile(null);
                         toast.success("Clipboard cleared successfully!");
                     }}><Trash2 size={18} /> Clear</button>
                     <button className={`flex-1 min-w-48 flex items-center justify-center transition gap-2 hover:bg-green-600 hover:scale-[101%] active:bg-green-700  ${isDarkMode ? 'text-black bg-green-500' : "text-white bg-green-600"} py-2 rounded-lg`} onClick={updateClipboard}><Send size={18} /> Send to Clipboard</button>
@@ -633,13 +609,13 @@ export default function App() {
                         <button aria-label="Delete All Clipboards" className="text-red-500 active:text-red-700 active:scale-95 flex gap-2" onClick={deleteAll}><Trash2Icon size={19} /></button>
                     </div>
                     <div className="my-4 w-full relative">
-                        <input className={`border w-full p-2 px-2.5 py-1.5 rounded-lg flex-1 
+                        <input className={`border w-full p-2 pl-8 px-2.5 py-1.5 rounded-lg flex-1 
                             ${isDarkMode ? 'bg-slate-800 border-gray-600 text-gray-200' : 'bg-gray-100 border-gray-300 text-gray-900'}`}
                             placeholder="Search Clipboard History"
                             value={searchKeyword}
                             onChange={handleSearch}
                             type="search" name="search_keywords" id="search_keyword" />
-                        <Search size={20} className="absolute top-2 right-3 text-gray-400" />
+                        <Search size={18} className="absolute top-2.5 left-2 text-gray-400" />
                     </div>
                     <ul className="mt-4 space-y-2">
                         {searchResults.map((item, index) => (
