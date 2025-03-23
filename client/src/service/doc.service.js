@@ -1,6 +1,6 @@
 import supabase from "../config/supabase";
 
-export const createSession = async () => {
+export const createSession = async (setSessionCode) => {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let newCode = "";
     for (let i = 0; i < 5; i++) {

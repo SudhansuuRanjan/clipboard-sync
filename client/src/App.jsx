@@ -13,6 +13,7 @@ export default function App() {
     const [sessionCode, setSessionCode] = useState("");
     const [inputCode, setInputCode] = useState("");
     const [clipboard, setClipboard] = useState(sessionStorage.getItem("clipboard") || "");
+    const [isSensitive, setIsSensitive] = useState(false);
     const [history, setHistory] = useState([]);
     const [expandedId, setExpandedId] = useState(null);
     const [deleteOne, setDeleteOne] = useState(false);
@@ -171,7 +172,7 @@ export default function App() {
         let firstTime = false;
 
         if (!sessionCode) {
-            await createSession();
+            await createSession(setSessionCode);
             firstTime = true;
         }
         const code = localStorage.getItem("sessionCode");
@@ -179,7 +180,8 @@ export default function App() {
             session_code: code,
             content: clipboard,
             fileUrl: fileUrl ? fileUrl.url : null,
-            file: fileUrl ? fileUrl : null
+            file: fileUrl ? fileUrl : null,
+            sensitive: isSensitive,
         }]);
 
         if (history.length == 0 && firstTime) {
@@ -197,6 +199,8 @@ export default function App() {
 
         setFileUrl(null);
         setClipboard("");
+        sessionStorage.removeItem("clipboard");
+        setIsSensitive(false);
         toast.success("Clipboard updated successfully!");
     };
 
@@ -483,6 +487,7 @@ export default function App() {
                                 if (!ans) return;
                                 setSessionCode("");
                                 localStorage.removeItem("sessionCode");
+                                sessionStorage.removeItem("clipboard");
                                 setHistory([]);
                             }}>
                             <LogOut size={17} />
@@ -506,20 +511,30 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                    <textarea
-                        rows={6}
-                        className={`border p-3 w-full rounded-lg focus:ring-2 focus:ring-blue-400 
+                    <div className="relative">
+                        <textarea
+                            rows={6}
+                            className={`border p-3 w-full rounded-lg focus:ring-2 focus:ring-blue-400 
                         ${isDarkMode ? 'bg-slate-800 border-gray-600 text-gray-200' : 'bg-gray-100 border-gray-300 text-gray-900'}`}
-                        placeholder="Type or paste clipboard content here..."
-                        value={
-                            clipboard
-                        }
-                        onChange={(e) => {
-                            // save input value to session storage
-                            setClipboard(e.target.value);
-                            sessionStorage.setItem("clipboard", e.target.value);
-                        }}
-                    />
+                            placeholder="Type or paste clipboard content here..."
+                            value={
+                                clipboard
+                            }
+                            onChange={(e) => {
+                                // save input value to session storage
+                                setClipboard(e.target.value);
+                                sessionStorage.setItem("clipboard", e.target.value);
+                            }}
+                        />
+
+                        <div className="flex absolute items-center gap-1 w-fit right-3 bottom-3 z-10">
+                            <label htmlFor="is-sensitive">Sensitive</label>
+                            <input
+                                checked={isSensitive}
+                                onChange={(e) => setIsSensitive(e.target.checked)}
+                                type="checkbox" id="is-sensitive" className="ml-2" />
+                        </div>
+                    </div>
 
                     <div className="flex flex-wrap md:gap-2 gap-1.5">
                         <input type="file" className="hidden" id="attachfile" accept=".txt" onChange={async (e) => {
@@ -598,79 +613,80 @@ export default function App() {
                 </div>
             </div>
 
-            {history.length > 0 && (
-                <div className={`max-w-5xl lg:max-w-4xl md:max-w-3xl w-full shadow-lg rounded-2xl md:p-6 p-5 mt-6 
+            {
+                history.length > 0 && (
+                    <div className={`max-w-5xl lg:max-w-4xl md:max-w-3xl w-full shadow-lg rounded-2xl md:p-6 p-5 mt-6 
                     ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-                    <div className="flex justify-between items-center">
-                        <h2 className={`text-xl font-semibold 
+                        <div className="flex justify-between items-center">
+                            <h2 className={`text-xl font-semibold 
                             ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                            Clipboard History
-                        </h2>
-                        <button aria-label="Delete All Clipboards" className="text-red-500 active:text-red-700 active:scale-95 flex gap-2" onClick={deleteAll}><Trash2Icon size={19} /></button>
-                    </div>
-                    <div className="my-4 w-full relative">
-                        <input className={`border w-full p-2 pl-8 px-2.5 py-1.5 rounded-lg flex-1 
+                                Clipboard History
+                            </h2>
+                            <button aria-label="Delete All Clipboards" className="text-red-500 active:text-red-700 active:scale-95 flex gap-2" onClick={deleteAll}><Trash2Icon size={19} /></button>
+                        </div>
+                        <div className="my-4 w-full relative">
+                            <input className={`border w-full p-2 pl-8 px-2.5 py-1.5 rounded-lg flex-1 
                             ${isDarkMode ? 'bg-slate-800 border-gray-600 text-gray-200' : 'bg-gray-100 border-gray-300 text-gray-900'}`}
-                            placeholder="Search Clipboard History"
-                            value={searchKeyword}
-                            onChange={handleSearch}
-                            type="search" name="search_keywords" id="search_keyword" />
-                        <Search size={18} className="absolute top-2.5 left-2 text-gray-400" />
-                    </div>
-                    <ul className="mt-4 space-y-2">
-                        {searchResults.map((item, index) => (
-                            <li key={item.id} className={`flex relative justify-between pb-6 items-start p-2 py-2.5 gap-2 rounded-lg shadow 
+                                placeholder="Search Clipboard History"
+                                value={searchKeyword}
+                                onChange={handleSearch}
+                                type="search" name="search_keywords" id="search_keyword" />
+                            <Search size={18} className="absolute top-2.5 left-2 text-gray-400" />
+                        </div>
+                        <ul className="mt-4 space-y-2">
+                            {searchResults.map((item, index) => (
+                                <li key={item.id} className={`flex relative justify-between pb-6 items-start p-2 py-2.5 gap-2 rounded-lg shadow 
                                 ${isDarkMode ? 'bg-slate-800' : 'bg-gray-50'}`}>
-                                <div className="flex gap-1 items-start">
-                                    <button aria-label="Expand Content" className="text-blue-500 transition" onClick={() => toggleExpand(item.id)}>
-                                        {expandedId !== item.id ? <ChevronRight size={18} /> : <ChevronDown size={19} />}
-                                    </button>
-                                    <div className="flex flex-col">
-                                        <p
-                                            onClick={() => toggleExpand(item.id)}
-                                            className={`text-sm flex-1 word-wrap link-wrap cursor-pointer truncate text-wrap w-fit
+                                    <div className="flex gap-1 items-start">
+                                        <button aria-label="Expand Content" className="text-blue-500 transition" onClick={() => toggleExpand(item.id)}>
+                                            {expandedId !== item.id ? <ChevronRight size={18} /> : <ChevronDown size={19} />}
+                                        </button>
+                                        <div className="flex flex-col">
+                                            <p
+                                                onClick={() => toggleExpand(item.id)}
+                                                className={`text-sm flex-1 word-wrap link-wrap cursor-pointer truncate text-wrap w-fit
   ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
-                                            dangerouslySetInnerHTML={{
-                                                __html: expandedId === item.id
-                                                    ? convertLinksToAnchor(item.content)
-                                                    : item.content.length > 180
-                                                        ? convertLinksToAnchor(item.content.substring(0, 180)) + "..."
-                                                        : convertLinksToAnchor(item.content.substring(0, 180))
-                                            }}
-                                        ></p>
+                                                dangerouslySetInnerHTML={{
+                                                    __html: expandedId === item.id
+                                                        ? convertLinksToAnchor(item.content, item)
+                                                        : item.content.length > 180
+                                                            ? convertLinksToAnchor(item.content.substring(0, 180), item) + "..."
+                                                            : convertLinksToAnchor(item.content.substring(0, 180), item)
+                                                }}
+                                            ></p>
 
-                                        {item.file && <div className={`border flex items-center gap-1 rounded ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-100'
-                                            }  px-1 ${item.content.length === 0 ? 'mt-6' : 'mt-3'} `}>
-                                            <div>{item.file && item.file.type === "file" ? <Paperclip size={16} className="text-green-500" /> : <FileImage size={16} className="text-rose-500" />}</div>
-                                            <div>
-                                                {
-                                                    item.file && <a href={item.fileUrl}
-                                                        className="text-blue-500 text-sm hover:underline truncate"
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                    >
-
-                                                        {/* truncate file path (include first 5 letters last 2 letters with .extention if filename is large else show it in full) */}
-                                                        {item.file.path.length > 34 ? item.file.path.substring(6, 10) + "..." + item.file.path.substring(item.file.path.length - 7) : item.file.path.substring(6)}
-                                                    </a>
-                                                }
-                                            </div>
-                                        </div>}
+                                            {item.file && <div className={`border flex items-center gap-1 rounded ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-100'
+                                                }  px-1 ${item.content.length === 0 ? 'mt-6' : 'mt-3'} `}>
+                                                <div>{item.file && item.file.type === "file" ? <Paperclip size={16} className="text-green-500" /> : <FileImage size={16} className="text-rose-500" />}</div>
+                                                <div>
+                                                    {
+                                                        item.file && <a href={item.fileUrl}
+                                                            className="text-blue-500 text-sm hover:underline truncate"
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                        >
+                                                            {/* truncate file path (include first 5 letters last 2 letters with .extention if filename is large else show it in full) */}
+                                                            {item.file.path.length > 34 ? item.file.path.substring(6, 10) + "..." + item.file.path.substring(item.file.path.length - 7) : item.file.path.substring(6)}
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </div>}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <button aria-label="Edit Clipboard" className="text-green-500 active:text-green-700 active:scale-95" onClick={() => handleEdit(item.id)}><Edit size={19} /></button>
-                                    <button aria-label="Copy Content" className="text-blue-500 active:text-blue-700 active:scale-95" onClick={() => copyToClipboard(item.content)}><Copy size={19} /></button>
-                                </div>
+                                    <div className="flex items-center gap-3">
+                                        <button aria-label="Edit Clipboard" className="text-green-500 active:text-green-700 active:scale-95" onClick={() => handleEdit(item.id)}><Edit size={19} /></button>
+                                        <button aria-label="Copy Content" className="text-blue-500 active:text-blue-700 active:scale-95" onClick={() => copyToClipboard(item.content)}><Copy size={19} /></button>
+                                    </div>
 
-                                <p className={`text-xs absolute bottom-1 right-1.5 font-medium text-gray-400`}>
-                                    {new Date(item.created_at).toLocaleString()}
-                                </p>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+                                    <p className={`text-xs absolute bottom-1 right-1.5 font-medium text-gray-400`}>
+                                        {new Date(item.created_at).toLocaleString()}
+                                    </p>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )
+            }
 
             <footer className={`mt-6 text-center text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 <div className="flex flex-col items-center gap-3">
@@ -683,6 +699,6 @@ export default function App() {
                     </div>
                 </div>
             </footer>
-        </div>
+        </div >
     );
 }

@@ -1,4 +1,8 @@
-export const convertLinksToAnchor = (text) => {
+export const convertLinksToAnchor = (text, item) => {
+    if(item.sensitive) {
+        // replace it with ******
+        return "**********************";
+    }
     const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
     return text.replace(urlRegex, (url) => {
         let hyperlink = url.startsWith("www.") ? `https://${url}` : url;
