@@ -537,7 +537,8 @@ export default function App() {
                     </div>
 
                     <div className="flex flex-wrap md:gap-2 gap-1.5">
-                        <input type="file" className="hidden" id="attachfile" accept=".txt" onChange={async (e) => {
+                        <input type="file" className="hidden" id="attachfile" accept="application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint,
+text/plain, application/pdf, image/*" onChange={async (e) => {
                             const file = e.target.files[0];
                             // Upload file to Supabase Storage
                             await UploadFile(file);
